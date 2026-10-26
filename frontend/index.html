@@ -100,35 +100,6 @@
       gap: 12px;
     }
 
-    /* Badges de mode de sécurité */
-    .sec-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 10px;
-      border-radius: var(--radius-full);
-      font-size: 0.75rem;
-      font-weight: 600;
-      cursor: pointer;
-      user-select: none;
-      transition: all 0.2s;
-    }
-    .sec-badge.vuln {
-      background: var(--warning-bg);
-      color: #b45309;
-      border: 1px solid #fde68a;
-    }
-    .sec-badge.vuln:hover { background: #fef3c7; }
-    .sec-badge.secure {
-      background: var(--success-bg);
-      color: #15803d;
-      border: 1px solid #bbf7d0;
-    }
-    .sec-badge.secure:hover { background: #dcfce7; }
-    .sec-dot { width: 8px; height: 8px; border-radius: 50%; }
-    .sec-badge.vuln .sec-dot { background: #f59e0b; }
-    .sec-badge.secure .sec-dot { background: #22c55e; }
-
     /* Boutons */
     .btn {
       display: inline-flex;
@@ -481,59 +452,6 @@
     .demo-accounts p { font-weight: 600; margin-bottom: 8px; color: var(--secondary); }
     .demo-buttons { display: flex; flex-wrap: wrap; gap: 6px; }
 
-    /* PANNEAU DE DÉMONSTRATION DEVSECOPS */
-    .lab-banner {
-      background: #fffbeb;
-      border: 1px solid #fef3c7;
-      border-radius: var(--radius-lg);
-      padding: 16px;
-      margin-bottom: 24px;
-      box-shadow: var(--shadow-sm);
-    }
-    .lab-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      cursor: pointer;
-    }
-    .lab-header h3 {
-      font-size: 1rem;
-      font-weight: 700;
-      color: #92400e;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .lab-content {
-      margin-top: 14px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 12px;
-      font-size: 0.85rem;
-    }
-    .lab-card {
-      background: #fff;
-      border: 1px solid #fde68a;
-      border-radius: var(--radius);
-      padding: 12px;
-    }
-    .lab-card h5 {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #78350f;
-      margin-bottom: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .lab-card code {
-      background: #f1f5f9;
-      padding: 2px 4px;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      color: #334155;
-    }
-
     /* TABLEAU DE BORD ESPACE CONNECTÉ */
     .dashboard-layout {
       display: grid;
@@ -842,12 +760,6 @@
       </div>
 
       <div class="nav-actions">
-        <!-- Badge Mode de Sécurité (Cliquable pour basculer en lab) -->
-        <div id="secModeBadge" class="sec-badge vuln" onclick="toggleSecurityMode()" title="Cliquer pour basculer entre mode Vulnérable et Sécurisé">
-          <span class="sec-dot"></span>
-          <span id="secModeText">Mode Pédagogique (Vulnérable)</span>
-        </div>
-
         <!-- Cloche de Notifications (Espace Connecté) -->
         <div id="notifWrapper" class="notif-wrapper hide">
           <button class="notif-bell" onclick="toggleNotifDropdown()" title="Notifications">
@@ -888,41 +800,7 @@
   <!-- ========================================================================= -->
   <main>
 
-    <!-- 1. BANNIÈRE LABORATOIRE DEVSECOPS (Visible sur toutes les pages) -->
-    <div class="lab-banner">
-      <div class="lab-header" onclick="toggleLabContent()">
-        <h3>🧪 Laboratoire DevSecOps — Démonstration des 4 Vulnérabilités Pédagogiques</h3>
-        <span id="labToggleIcon">▼</span>
-      </div>
-      <div id="labContent" class="lab-content">
-        <div class="lab-card">
-          <h5>1. SQL Injection (A03) <span id="labV1" class="badge badge-open">ACTIF</span></h5>
-          <p>Route : <code>GET /search?q=</code></p>
-          <p style="margin-top:4px;">Charge utile : <code>' OR 1=1 --</code></p>
-          <button class="btn btn-sm btn-secondary" style="margin-top:6px;" onclick="demoSqlInjection()">Tester SQLi</button>
-        </div>
-        <div class="lab-card">
-          <h5>2. XSS Stocké (A03) <span id="labV2" class="badge badge-open">ACTIF</span></h5>
-          <p>Emplacement : <code>Commentaires</code></p>
-          <p style="margin-top:4px;">Charge : <code>&lt;img src=x onerror=alert('XSS')&gt;</code></p>
-          <button class="btn btn-sm btn-secondary" style="margin-top:6px;" onclick="demoXssPayload()">Copier Payload XSS</button>
-        </div>
-        <div class="lab-card">
-          <h5>3. IDOR (A01) <span id="labV3" class="badge badge-open">ACTIF</span></h5>
-          <p>Route : <code>GET /tickets/:id</code></p>
-          <p style="margin-top:4px;">Roua consulte le ticket #3 (Mahdi).</p>
-          <button class="btn btn-sm btn-secondary" style="margin-top:6px;" onclick="demoIdor()">Tester IDOR (Ticket 3)</button>
-        </div>
-        <div class="lab-card">
-          <h5>4. Secret Fictif Exposé (A02) <span id="labV4" class="badge badge-open">ACTIF</span></h5>
-          <p>JWT : <code>hd_fake_8f3a9c...</code></p>
-          <p style="margin-top:4px;">Détectable par Gitleaks en S2.</p>
-          <button class="btn btn-sm btn-secondary" style="margin-top:6px;" onclick="toggleSecurityMode()">Bascule Sécurisé</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 2. VUE PUBLIQUE (Non authentifié) -->
+    <!-- 1. VUE PUBLIQUE (Non authentifié) -->
     <div id="publicView">
       <section class="hero-section">
         <div class="hero-badges">
@@ -1457,20 +1335,7 @@
     }
 
     function updateSecurityBadgeUI() {
-      const isSec = currentSecurityMode === 'secure';
-      const badge = $('secModeBadge');
-      badge.className = 'sec-badge ' + (isSec ? 'secure' : 'vuln');
-      $('secModeText').textContent = isSec ? 'Mode Sécurisé (Corrigé)' : 'Mode Pédagogique (Vulnérable)';
-      
-      const badgeStyle = isSec ? 'badge-closed' : 'badge-open';
-      const text = isSec ? 'CORRIGÉ' : 'VULNÉRABLE';
-      ['labV1', 'labV2', 'labV3', 'labV4'].forEach(id => {
-        const el = $(id);
-        if (el) {
-          el.className = 'badge ' + badgeStyle;
-          el.textContent = text;
-        }
-      });
+      // Le mode de sécurité est géré en arrière-plan sans polluer l'interface utilisateur
     }
 
     async function toggleSecurityMode() {
@@ -2081,45 +1946,6 @@
         `;
         tbody.appendChild(tr);
       });
-    }
-
-    // Démonstrations interactives des Failles
-    function demoSqlInjection() {
-      if (!authToken) {
-        showToast('Connectez-vous d\'abord (ex: Roua) pour tester la recherche.', 'warning');
-        openLoginModal();
-        return;
-      }
-      switchView('tickets');
-      $('searchInput').value = "' OR 1=1 --";
-      loadTickets();
-      showToast('Payload SQLi injecté : \' OR 1=1 --', 'info');
-    }
-
-    function demoXssPayload() {
-      const payload = `<img src=x onerror="alert('VULN-002: Stored XSS exécuté !')">`;
-      navigator.clipboard.writeText(payload);
-      showToast('Payload XSS copié dans le presse-papier ! Collez-le dans un commentaire.', 'info');
-      if ($('newCommentText')) {
-        $('newCommentText').value = payload;
-      }
-    }
-
-    async function demoIdor() {
-      if (!authToken) {
-        showToast('Connectez-vous en Roua pour tester l\'accès au ticket de Mahdi.', 'warning');
-        openLoginModal();
-        return;
-      }
-      showToast('Tentative d\'accès au Ticket #3 (propriété de Mahdi)...', 'info');
-      try {
-        await openTicketDetail(3);
-        if (currentSecurityMode === 'vulnerable') {
-          showToast('VULN-003 IDOR : Ticket #3 affiché avec succès malgré l\'absence de droits !', 'warning');
-        }
-      } catch (e) {
-        // En mode sécurisé, l'erreur 403 est captée
-      }
     }
 
     // Utilitaires d'échappement et Toast
