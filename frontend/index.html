@@ -1137,13 +1137,13 @@
 
       <div class="form-group">
         <label for="loginUsername">Identifiant</label>
-        <input type="text" id="loginUsername" placeholder="roua, mahdi, agent1, admin1..." autocomplete="username">
+        <input type="text" id="loginUsername" placeholder="Nom d'utilisateur" autocomplete="username" onkeydown="if(event.key==='Enter') performLogin()">
       </div>
 
       <div class="form-group">
         <label for="loginPassword">Mot de passe</label>
         <div class="password-wrap">
-          <input type="password" id="loginPassword" value="Passw0rd!" autocomplete="current-password">
+          <input type="password" id="loginPassword" placeholder="Mot de passe" autocomplete="current-password" onkeydown="if(event.key==='Enter') performLogin()">
           <button type="button" class="toggle-pass" onclick="togglePasswordVisibility('loginPassword')">👁️</button>
         </div>
       </div>
@@ -1153,17 +1153,6 @@
       <button class="btn btn-primary" style="width: 100%; padding: 12px;" onclick="performLogin()">
         Se connecter
       </button>
-
-      <!-- Comptes de démonstration 1-clic pour les tests -->
-      <div class="demo-accounts">
-        <p>Comptes fictifs de test (Mot de passe : <code>Passw0rd!</code>) :</p>
-        <div class="demo-buttons">
-          <button class="btn btn-sm btn-secondary" onclick="fillLogin('roua')">👤 Roua (User)</button>
-          <button class="btn btn-sm btn-secondary" onclick="fillLogin('mahdi')">👤 Mahdi (User)</button>
-          <button class="btn btn-sm btn-secondary" onclick="fillLogin('agent1')">🛠️ Agent 1</button>
-          <button class="btn btn-sm btn-secondary" onclick="fillLogin('admin1')">👑 Admin 1</button>
-        </div>
-      </div>
     </div>
   </div>
 
