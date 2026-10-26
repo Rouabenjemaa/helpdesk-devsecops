@@ -12,7 +12,7 @@
 |---|---|---|---|---|---|---|
 | **VULN-001** | Injection SQL (SQLi) | A03:2021 – Injection | Tampering, Information Disclosure | `GET /search?q=` dans `backend/server.js` | Démontré avec `' OR 1=1 --` | Requêtes paramétrées `$1` |
 | **VULN-002** | Cross-Site Scripting (XSS) stocké | A03:2021 – Injection | Tampering | Affichage des commentaires dans `frontend/index.html` | Exécution de payload JavaScript | `textContent`, encodage entités & CSP |
-| **VULN-003** | Insecure Direct Object Reference (IDOR) | A01:2021 – Broken Access Control | Information Disclosure, Elevation of Privilege | `GET /tickets/:id` dans `backend/server.js` | Alice lit le ticket #3 de Bob | Contrôle propriétaire ou rôle agent/admin |
+| **VULN-003** | Insecure Direct Object Reference (IDOR) | A01:2021 – Broken Access Control | Information Disclosure, Elevation of Privilege | `GET /tickets/:id` dans `backend/server.js` | Roua lit le ticket #3 de Mahdi | Contrôle propriétaire ou rôle agent/admin |
 | **VULN-004** | Secret JWT fictif exposé en clair | A02:2021 – Cryptographic Failures / A05:2021 – Security Misconfiguration | Information Disclosure | Constante `VULNERABLE_JWT_SECRET` dans `backend/server.js` | Détectable par Gitleaks | Injection par variable d'environnement & Secret K8s |
 | **BONUS** | Dépendances vulnérables | A06:2021 – Vulnerable and Outdated Components | Tampering | `backend/package.json` | Versions initiales obsolètes | Analyse Trivy & mise à niveau |
 
@@ -37,19 +37,19 @@ const sql = `SELECT ... FROM tickets t WHERE ${scope} AND t.title ILIKE '%${q}%'
 ```
 
 ### 1.3 Scénario de Test & Preuve Avant Correction
-1. Authentification en tant qu'utilisateur standard (`alice`).
+1. Authentification en tant qu'utilisateur standard (`roua`).
 2. Requête normale :
 ```bash
 curl -s -G "http://localhost:8080/api/search" --data-urlencode "q=VPN" \
-  -H "Authorization: Bearer $ALICE_TOKEN"
-# Résultat : retourne uniquement le ticket VPN d'Alice (#2).
+  -H "Authorization: Bearer $ROUA_TOKEN"
+# Résultat : retourne uniquement le ticket VPN de Roua (#2).
 ```
 3. Injection de la charge utile `' OR 1=1 --` :
 ```bash
 curl -s -G "http://localhost:8080/api/search" --data-urlencode "q=' OR 1=1 --" \
-  -H "Authorization: Bearer $ALICE_TOKEN"
+  -H "Authorization: Bearer $ROUA_TOKEN"
 # Résultat : la clause "1=1" rend la condition universellement vraie et le commentaire "--" neutralise la suite.
-# Alice récupère TOUS les tickets de la base, y compris le ticket RH confidentiel de Bob (#3).
+# Roua récupère TOUS les tickets de la base, y compris le ticket RH confidentiel de Mahdi (#3).
 ```
 
 ### 1.4 Correctif Appliqué (Mode Sécurisé)
@@ -91,7 +91,7 @@ li.innerHTML = headerHtml + `<div class="comment-body">${c.body}</div>`;
 ```
 
 ### 2.3 Scénario de Test & Preuve Avant Correction
-1. Connecté en `alice`, ouvrir un ticket et ajouter le commentaire suivant :
+1. Connecté en `roua`, ouvrir un ticket et ajouter le commentaire suivant :
 ```html
 <img src=x onerror="alert('VULN-002: Stored XSS exécuté !')">
 ```
@@ -129,11 +129,11 @@ Le commentaire contenant `<img src=x onerror=...>` est affiché textuellement à
 L'API vérifiait la validité du jeton JWT (`auth`), mais n'effectuait aucune vérification de propriété entre l'identifiant de l'utilisateur connecté (`req.user.id`) et le champ `owner_id` du ticket demandé.
 
 ### 3.3 Scénario de Test & Preuve Avant Correction
-1. Alice (`id: 1`) s'authentifie et obtient un jeton JWT.
-2. Bob (`id: 2`) possède le ticket `#3` ("Accès dossier RH confidentiel refusé").
-3. Alice tente d'accéder au ticket de Bob :
+1. Roua (`id: 1`) s'authentifie et obtient un jeton JWT.
+2. Mahdi (`id: 2`) possède le ticket `#3` ("Accès dossier RH confidentiel refusé").
+3. Roua tente d'accéder au ticket de Mahdi :
 ```bash
-curl -s "http://localhost:8080/api/tickets/3" -H "Authorization: Bearer $ALICE_TOKEN"
+curl -s "http://localhost:8080/api/tickets/3" -H "Authorization: Bearer $ROUA_TOKEN"
 # Résultat : l'API renvoie le ticket #3 complet avec ses commentaires et son historique confidentiel.
 ```
 
@@ -151,7 +151,7 @@ if (SECURITY_MODE === 'secure') {
 ```
 
 ### 3.5 Test Après Correction
-En relançant la requête avec le jeton d'Alice sur le ticket #3, l'API renvoie un code HTTP `403 Forbidden` et enregistre l'événement dans le journal d'audit `audit_log`. Seul Bob ou les membres du support (agents/administrateurs) peuvent y accéder.
+En relançant la requête avec le jeton de Roua sur le ticket #3, l'API renvoie un code HTTP `403 Forbidden` et enregistre l'événement dans le journal d'audit `audit_log`. Seul Mahdi ou les membres du support (agents/administrateurs) peuvent y accéder.
 
 ---
 
@@ -189,3 +189,4 @@ function getJwtSecret() {
 
 ### 4.5 Test Après Correction
 Gitleaks valide l'absence de tout secret dans le dépôt Git et le pipeline passe avec succès.
+

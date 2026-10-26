@@ -85,13 +85,13 @@ Tous les comptes de démonstration utilisent le mot de passe fictif : **`Passw0r
 
 | Rôle | Identifiant | Nom | Permissions & Espaces |
 |---|---|---|---|
-| **`user`** | `alice` | Alice Test | Déclaration de tickets, suivi de ses tickets personnels, commentaires, notifications personnelles. |
-| **`user`** | `bob` | Bob Exemple | Deuxième utilisateur fictif (permet la démonstration de l'IDOR et de l'isolation des données). |
+| **`user`** | `roua` | Roua Ben Jemaa | Déclaration de tickets, suivi de ses tickets personnels, commentaires, notifications personnelles. |
+| **`user`** | `mahdi` | Mahdi Dkhil | Deuxième utilisateur fictif (permet la démonstration de l'IDOR et de l'isolation des données). |
 | **`user`** | `charlie` | Charlie Martin | Utilisateur ayant déclaré le ticket de sécurité (#5). |
 | **`agent`** | `agent1` | Agent Un | File d'attente globale, filtrage des incidents critiques, changement de statut (`open` &rarr; `in_progress` &rarr; `closed`), commentaires de prise en charge. |
 | **`admin`** | `admin1` | Administrateur IT | Métriques globales, création et désactivation de comptes utilisateurs, journal d'audit de sécurité, contrôle du mode de sécurité. |
 
-> 💡 **Astuce Démo :** Sur la page de connexion, des boutons à 1-clic permettent de préremplir instantanément les identifiants pour Alice, Bob, Agent 1 et Admin 1.
+> 💡 **Astuce Démo :** Sur la page de connexion, des boutons à 1-clic permettent de préremplir instantanément les identifiants pour Roua, Mahdi, Agent 1 et Admin 1.
 
 ---
 
@@ -101,18 +101,18 @@ L'application intègre un **sélecteur de mode** (accessible via l'interface web
 
 ### Faille 1 — Injection SQL (A03 Injection)
 - **Emplacement :** `GET /search?q=` dans `backend/server.js`
-- **Scénario :** Connecté en `alice`, rechercher un ticket avec la charge utile `' OR 1=1 --`.
+- **Scénario :** Connecté en `roua`, rechercher un ticket avec la charge utile `' OR 1=1 --`.
 - **Preuve en ligne de commande :**
 ```bash
-# 1. Connexion en tant qu'Alice
+# 1. Connexion en tant que Roua
 TOKEN=$(curl -s -X POST http://localhost:8080/api/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"alice","password":"Passw0rd!"}' | sed 's/.*"token":"\([^"]*\)".*/\1/')
+  -d '{"username":"roua","password":"Passw0rd!"}' | sed 's/.*"token":"\([^"]*\)".*/\1/')
 
-# 2. Recherche normale (ne retourne que les tickets d'Alice)
+# 2. Recherche normale (ne retourne que les tickets de Roua)
 curl -s -G "http://localhost:8080/api/search" --data-urlencode "q=VPN" -H "Authorization: Bearer $TOKEN"
 
-# 3. Injection SQL (retourne TOUS les tickets, y compris ceux de Bob)
+# 3. Injection SQL (retourne TOUS les tickets, y compris ceux de Mahdi)
 curl -s -G "http://localhost:8080/api/search" --data-urlencode "q=' OR 1=1 --" -H "Authorization: Bearer $TOKEN"
 ```
 - **Correction :** En basculant en mode sécurisé, la requête utilise un paramètre préparé `$3` avec `ILIKE` et neutralise l'injection.
@@ -122,7 +122,7 @@ curl -s -G "http://localhost:8080/api/search" --data-urlencode "q=' OR 1=1 --" -
 ### Faille 2 — XSS Stocké (A03 Injection)
 - **Emplacement :** Fil de commentaires dans `frontend/index.html` et `backend/server.js`
 - **Scénario :**
-  1. Se connecter en `alice`, ouvrir le ticket #1 et ajouter le commentaire :
+  1. Se connecter en `roua`, ouvrir le ticket #1 et ajouter le commentaire :
      ```html
      <img src=x onerror="alert('VULN-002: Stored XSS exécuté !')">
      ```
@@ -134,13 +134,13 @@ curl -s -G "http://localhost:8080/api/search" --data-urlencode "q=' OR 1=1 --" -
 
 ### Faille 3 — IDOR (A01 Broken Access Control)
 - **Emplacement :** `GET /tickets/:id` dans `backend/server.js`
-- **Scénario :** Alice (`id: 1`) tente d'accéder directement au ticket confidentiel #3 appartenant à Bob (`id: 2`).
+- **Scénario :** Roua (`id: 1`) tente d'accéder directement au ticket confidentiel #3 appartenant à Mahdi (`id: 2`).
 - **Preuve en ligne de commande :**
 ```bash
-# Alice consulte le ticket #3 appartenant à Bob
+# Roua consulte le ticket #3 appartenant à Mahdi
 curl -i -s "http://localhost:8080/api/tickets/3" -H "Authorization: Bearer $TOKEN"
 ```
-- **Résultat vulnérable :** HTTP `200 OK` avec exposition des données confidentielles de Bob.
+- **Résultat vulnérable :** HTTP `200 OK` avec exposition des données confidentielles de Mahdi.
 - **Résultat sécurisé :** HTTP `403 Forbidden` (`"Accès interdit : vous n'avez pas l'autorisation de consulter ce ticket"`) et inscription d'une alerte dans `audit_log`.
 
 ---

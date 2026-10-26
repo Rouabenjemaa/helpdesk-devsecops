@@ -910,7 +910,7 @@
         <div class="lab-card">
           <h5>3. IDOR (A01) <span id="labV3" class="badge badge-open">ACTIF</span></h5>
           <p>Route : <code>GET /tickets/:id</code></p>
-          <p style="margin-top:4px;">Alice consulte le ticket #3 (Bob).</p>
+          <p style="margin-top:4px;">Roua consulte le ticket #3 (Mahdi).</p>
           <button class="btn btn-sm btn-secondary" style="margin-top:6px;" onclick="demoIdor()">Tester IDOR (Ticket 3)</button>
         </div>
         <div class="lab-card">
@@ -1264,7 +1264,7 @@
 
       <div class="form-group">
         <label for="loginUsername">Identifiant</label>
-        <input type="text" id="loginUsername" placeholder="alice, bob, agent1, admin1..." autocomplete="username">
+        <input type="text" id="loginUsername" placeholder="roua, mahdi, agent1, admin1..." autocomplete="username">
       </div>
 
       <div class="form-group">
@@ -1285,8 +1285,8 @@
       <div class="demo-accounts">
         <p>Comptes fictifs de test (Mot de passe : <code>Passw0rd!</code>) :</p>
         <div class="demo-buttons">
-          <button class="btn btn-sm btn-secondary" onclick="fillLogin('alice')">👤 Alice (User)</button>
-          <button class="btn btn-sm btn-secondary" onclick="fillLogin('bob')">👤 Bob (User)</button>
+          <button class="btn btn-sm btn-secondary" onclick="fillLogin('roua')">👤 Roua (User)</button>
+          <button class="btn btn-sm btn-secondary" onclick="fillLogin('mahdi')">👤 Mahdi (User)</button>
           <button class="btn btn-sm btn-secondary" onclick="fillLogin('agent1')">🛠️ Agent 1</button>
           <button class="btn btn-sm btn-secondary" onclick="fillLogin('admin1')">👑 Admin 1</button>
         </div>
@@ -2086,7 +2086,7 @@
     // Démonstrations interactives des Failles
     function demoSqlInjection() {
       if (!authToken) {
-        showToast('Connectez-vous d\'abord (ex: Alice) pour tester la recherche.', 'warning');
+        showToast('Connectez-vous d\'abord (ex: Roua) pour tester la recherche.', 'warning');
         openLoginModal();
         return;
       }
@@ -2107,11 +2107,11 @@
 
     async function demoIdor() {
       if (!authToken) {
-        showToast('Connectez-vous en Alice pour tester l\'accès au ticket de Bob.', 'warning');
+        showToast('Connectez-vous en Roua pour tester l\'accès au ticket de Mahdi.', 'warning');
         openLoginModal();
         return;
       }
-      showToast('Tentative d\'accès au Ticket #3 (propriété de Bob)...', 'info');
+      showToast('Tentative d\'accès au Ticket #3 (propriété de Mahdi)...', 'info');
       try {
         await openTicketDetail(3);
         if (currentSecurityMode === 'vulnerable') {

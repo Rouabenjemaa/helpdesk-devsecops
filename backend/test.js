@@ -93,18 +93,18 @@ async function runTests() {
       return ticketOwnerId === requestUser.id;
     }
 
-    const alice = { id: 1, role: 'user' };
-    const bobTicketOwnerId = 2;
+    const roua = { id: 1, role: 'user' };
+    const mahdiTicketOwnerId = 2;
 
-    // En mode vulnérable : Alice accède au ticket de Bob (Faille 3)
-    assert.strictEqual(checkTicketAccess(bobTicketOwnerId, alice, 'vulnerable'), true, 'Mode vulnérable doit reproduire l\'IDOR');
+    // En mode vulnérable : Roua accède au ticket de Mahdi (Faille 3)
+    assert.strictEqual(checkTicketAccess(mahdiTicketOwnerId, roua, 'vulnerable'), true, 'Mode vulnérable doit reproduire l\'IDOR');
 
-    // En mode sécurisé : Alice est bloquée (Correction Faille 3)
-    assert.strictEqual(checkTicketAccess(bobTicketOwnerId, alice, 'secure'), false, 'Mode sécurisé doit bloquer l\'accès');
+    // En mode sécurisé : Roua est bloquée (Correction Faille 3)
+    assert.strictEqual(checkTicketAccess(mahdiTicketOwnerId, roua, 'secure'), false, 'Mode sécurisé doit bloquer l\'accès');
 
-    // L\'agent peut toujours intervenir
+    // L'agent peut toujours intervenir
     const agent = { id: 4, role: 'agent' };
-    assert.strictEqual(checkTicketAccess(bobTicketOwnerId, agent, 'secure'), true, 'L\'agent doit pouvoir accéder');
+    assert.strictEqual(checkTicketAccess(mahdiTicketOwnerId, agent, 'secure'), true, 'L\'agent doit pouvoir accéder');
   });
 
   // 4. Faille 2 : Logique XSS
@@ -159,3 +159,4 @@ async function runTests() {
 }
 
 runTests();
+

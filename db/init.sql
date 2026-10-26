@@ -93,8 +93,8 @@ CREATE INDEX idx_audit_log_created_at ON audit_log(created_at DESC);
 -- Données initiales FICTIVES (mot de passe haché bcrypt pour 'Passw0rd!')
 -- $2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi ou injecté par le seed applicatif
 INSERT INTO users (username, password_hash, role, full_name, email, is_active) VALUES
-  ('alice',   '$2a$10$w808q/dFj7E5zQfU6wL8ueZqV.HjA4vN1rWvXJqI9G9U6mO6G7Kk6', 'user',  'Alice Test',       'alice.test@helpdesk.local', true),
-  ('bob',     '$2a$10$w808q/dFj7E5zQfU6wL8ueZqV.HjA4vN1rWvXJqI9G9U6mO6G7Kk6', 'user',  'Bob Exemple',      'bob.exemple@helpdesk.local', true),
+  ('roua',    '$2a$10$w808q/dFj7E5zQfU6wL8ueZqV.HjA4vN1rWvXJqI9G9U6mO6G7Kk6', 'user',  'Roua Ben Jemaa',   'roua.benjemaa@helpdesk.local', true),
+  ('mahdi',   '$2a$10$w808q/dFj7E5zQfU6wL8ueZqV.HjA4vN1rWvXJqI9G9U6mO6G7Kk6', 'user',  'Mahdi Dkhil',      'mahdi.dkhil@helpdesk.local', true),
   ('charlie', '$2a$10$w808q/dFj7E5zQfU6wL8ueZqV.HjA4vN1rWvXJqI9G9U6mO6G7Kk6', 'user',  'Charlie Martin',   'charlie.martin@helpdesk.local', true),
   ('agent1',  '$2a$10$w808q/dFj7E5zQfU6wL8ueZqV.HjA4vN1rWvXJqI9G9U6mO6G7Kk6', 'agent', 'Agent Un',         'agent1@helpdesk.local', true),
   ('agent2',  '$2a$10$w808q/dFj7E5zQfU6wL8ueZqV.HjA4vN1rWvXJqI9G9U6mO6G7Kk6', 'agent', 'Agent Deux',       'agent2@helpdesk.local', true),
@@ -103,7 +103,7 @@ INSERT INTO users (username, password_hash, role, full_name, email, is_active) V
 INSERT INTO tickets (title, description, status, priority, category, owner_id, created_at, updated_at) VALUES
   ('Imprimante bloquée', 'Poste SN-48213, IP interne 10.20.4.17, bourrage papier récurrent dans le bac 2.', 'in_progress', 'Moyenne', 'Matériel', 1, now() - interval '2 days', now() - interval '1 hour'),
   ('VPN inaccessible depuis télétravail', 'Poste SN-77190, IP 10.20.8.5, échec de négociation TLS sur concentrateur VPN.', 'open', 'Haute', 'Réseau', 1, now() - interval '1 day', now() - interval '1 day'),
-  ('Accès dossier RH confidentiel refusé', 'Demande de droits en lecture pour Bob Exemple, poste SN-50021, suite à transfert de service.', 'open', 'Basse', 'Accès et comptes', 2, now() - interval '3 days', now() - interval '3 days'),
+  ('Accès dossier RH confidentiel refusé', 'Demande de droits en lecture pour Mahdi Dkhil, poste SN-50021, suite à transfert de service.', 'open', 'Basse', 'Accès et comptes', 2, now() - interval '3 days', now() - interval '3 days'),
   ('Écran noir au démarrage', 'Poste SN-31877, IP 10.20.2.40. Aucun affichage après mise à jour des pilotes graphiques.', 'closed', 'Moyenne', 'Matériel', 2, now() - interval '5 days', now() - interval '2 days'),
   ('Alerte sécurité : tentative de phishing signalée', 'Email frauduleux demandant réinitialisation mot de passe avec lien tiers inconnu.', 'open', 'Critique', 'Sécurité', 3, now() - interval '4 hours', now() - interval '4 hours'),
   ('Dysfonctionnement logiciel comptable ERP', 'Poste SN-48213, plantage systématique lors de l''exportation des états trimestriels.', 'in_progress', 'Haute', 'Logiciel', 1, now() - interval '6 hours', now() - interval '30 minutes');
@@ -126,6 +126,6 @@ INSERT INTO ticket_history (ticket_id, changed_by, old_status, new_status, comme
 
 INSERT INTO audit_log (user_id, username, action, details, ip, created_at) VALUES
   (6, 'admin1', 'SYSTEM_INIT', 'Initialisation de la base de données HelpDesk avec données fictives', '127.0.0.1', now() - interval '5 days'),
-  (1, 'alice', 'USER_LOGIN', 'Authentification réussie pour alice', '10.20.4.17', now() - interval '2 days'),
+  (1, 'roua', 'USER_LOGIN', 'Authentification réussie pour roua', '10.20.4.17', now() - interval '2 days'),
   (4, 'agent1', 'TICKET_STATUS_UPDATE', 'Ticket #1 passé de open à in_progress', '10.20.1.10', now() - interval '1 day'),
   (4, 'agent1', 'TICKET_STATUS_UPDATE', 'Ticket #4 passé de in_progress à closed', '10.20.1.10', now() - interval '2 days');

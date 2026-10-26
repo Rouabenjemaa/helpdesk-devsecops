@@ -314,7 +314,7 @@ app.get('/tickets', auth, async (req, res) => {
 
 // GET /tickets/:id : Détail d'un ticket avec commentaires et historique
 // FAILLE 3 (IDOR) :
-// - Mode 'vulnerable' : n'effectue aucun contrôle du propriétaire. Alice peut lire les tickets de Bob.
+// - Mode 'vulnerable' : n'effectue aucun contrôle du propriétaire. Roua peut lire les tickets de Mahdi.
 // - Mode 'secure' : vérifie que l'utilisateur est soit propriétaire, soit agent, soit admin.
 app.get('/tickets/:id', auth, async (req, res) => {
   const ticketId = parseInt(req.params.id, 10);
@@ -899,8 +899,8 @@ async function seedDatabase() {
   if (userCheck.rows.length > 0) {
     // S'assurer que le mot de passe bcrypt correspond bien à Passw0rd! pour les tests
     const testHash = await bcrypt.hash('Passw0rd!', 10);
-    await pool.query('UPDATE users SET password_hash = $1 WHERE username IN (\'alice\', \'bob\', \'charlie\', \'agent1\', \'agent2\', \'admin1\')', [testHash]);
-    console.log('[SEED] Mots de passe de test validés pour alice, bob, agent1, admin1 (Passw0rd!).');
+    await pool.query('UPDATE users SET password_hash = $1 WHERE username IN (\'roua\', \'mahdi\', \'charlie\', \'agent1\', \'agent2\', \'admin1\')', [testHash]);
+    console.log('[SEED] Mots de passe de test validés pour roua, mahdi, agent1, admin1 (Passw0rd!).');
     return;
   }
 
@@ -910,8 +910,8 @@ async function seedDatabase() {
   // Insertion utilisateurs
   await pool.query(`
     INSERT INTO users (username, password_hash, role, full_name, email, is_active) VALUES
-      ('alice',   $1, 'user',  'Alice Test',       'alice.test@helpdesk.local', true),
-      ('bob',     $1, 'user',  'Bob Exemple',      'bob.exemple@helpdesk.local', true),
+      ('roua',    $1, 'user',  'Roua Ben Jemaa',   'roua.benjemaa@helpdesk.local', true),
+      ('mahdi',   $1, 'user',  'Mahdi Dkhil',      'mahdi.dkhil@helpdesk.local', true),
       ('charlie', $1, 'user',  'Charlie Martin',   'charlie.martin@helpdesk.local', true),
       ('agent1',  $1, 'agent', 'Agent Un',         'agent1@helpdesk.local', true),
       ('agent2',  $1, 'agent', 'Agent Deux',       'agent2@helpdesk.local', true),
@@ -923,7 +923,7 @@ async function seedDatabase() {
     INSERT INTO tickets (title, description, status, priority, category, owner_id) VALUES
       ('Imprimante bloquée', 'Poste SN-48213, IP interne 10.20.4.17, bourrage papier récurrent dans le bac 2.', 'in_progress', 'Moyenne', 'Matériel', 1),
       ('VPN inaccessible depuis télétravail', 'Poste SN-77190, IP 10.20.8.5, échec de négociation TLS sur concentrateur VPN.', 'open', 'Haute', 'Réseau', 1),
-      ('Accès dossier RH confidentiel refusé', 'Demande de droits en lecture pour Bob Exemple, poste SN-50021, suite à transfert de service.', 'open', 'Basse', 'Accès et comptes', 2),
+      ('Accès dossier RH confidentiel refusé', 'Demande de droits en lecture pour Mahdi Dkhil, poste SN-50021, suite à transfert de service.', 'open', 'Basse', 'Accès et comptes', 2),
       ('Écran noir au démarrage', 'Poste SN-31877, IP 10.20.2.40. Aucun affichage après mise à jour des pilotes graphiques.', 'closed', 'Moyenne', 'Matériel', 2),
       ('Alerte sécurité : tentative de phishing signalée', 'Email frauduleux demandant réinitialisation mot de passe avec lien tiers inconnu.', 'open', 'Critique', 'Sécurité', 3),
       ('Dysfonctionnement logiciel comptable ERP', 'Poste SN-48213, plantage systématique lors de l''exportation des états trimestriels.', 'in_progress', 'Haute', 'Logiciel', 1)

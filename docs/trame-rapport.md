@@ -29,7 +29,7 @@
 ### 4. Dossier des Failles Volontaires Initiales (2 pages)
 - **Faille 1 (SQLi)** : `GET /search?q=` — payload `' OR 1=1 --`, cause (concaténation), preuve d'extraction.
 - **Faille 2 (XSS Stocké)** : Commentaires — payload `<img src=x onerror=...>`, cause (affichage sans échappement).
-- **Faille 3 (IDOR)** : `GET /tickets/:id` — accès direct au ticket #3 de Bob par Alice sans vérification.
+- **Faille 3 (IDOR)** : `GET /tickets/:id` — accès direct au ticket #3 de Mahdi par Roua sans vérification.
 - **Faille 4 (Secret Exposé)** : Constante `JWT_SECRET` dans `backend/server.js`, détection par Gitleaks.
 - **Bonus** : Dépendances vulnérables identifiées par Trivy.
 - Correctifs techniques appliqués pour chaque faille et tests de validation.
