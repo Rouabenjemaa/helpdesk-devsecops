@@ -1,0 +1,60 @@
+name: "🐛 Bug Report"
+description: Signaler un incident ou un dysfonctionnement
+title: "[BUG] "
+labels: ["bug", "triage"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Signalement d'incident
+        Merci de remplir ce formulaire pour nous aider à résoudre le problème.
+
+  - type: input
+    id: ticket-id
+    attributes:
+      label: Identifiant du ticket HelpDesk
+      description: Si un ticket a déjà été créé sur la plateforme, indiquez son ID
+      placeholder: "ex: TKT-042"
+    validations:
+      required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description du problème
+      description: Décrivez clairement le dysfonctionnement observé
+      placeholder: "Le bouton X ne répond pas quand..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Sévérité
+      options:
+        - Critique (service indisponible)
+        - Haute (fonctionnalité majeure impactée)
+        - Moyenne (fonctionnalité mineure impactée)
+        - Basse (cosmétique ou suggestion)
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Étapes pour reproduire
+      description: |
+        1. Aller sur...
+        2. Cliquer sur...
+        3. Observer...
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environnement
+      placeholder: "ex: Docker local, prod, navigateur Chrome 120"
+    validations:
+      required: false

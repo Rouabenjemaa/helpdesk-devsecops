@@ -1,0 +1,56 @@
+name: "🔒 Rapport de Vulnérabilité"
+description: Signaler une faille de sécurité (environnement de lab uniquement)
+title: "[SECURITY] "
+labels: ["security", "vulnerability"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## ⚠️ Rapport de Sécurité — Environnement de Laboratoire
+        Ce formulaire est réservé aux rapports de vulnérabilités dans le cadre du
+        module DevSecOps ING-5-SSIR. Ne signalez que des vulnérabilités identifiées
+        dans l'environnement de laboratoire autorisé.
+
+  - type: dropdown
+    id: vuln-type
+    attributes:
+      label: Type de vulnérabilité
+      options:
+        - SQL Injection (VULN-001)
+        - XSS Stocké (VULN-002)
+        - IDOR (VULN-003)
+        - Secret Hardcodé (VULN-004)
+        - Autre
+    validations:
+      required: true
+
+  - type: dropdown
+    id: owasp-category
+    attributes:
+      label: Catégorie OWASP
+      options:
+        - "A01:2021 - Broken Access Control"
+        - "A02:2021 - Cryptographic Failures"
+        - "A03:2021 - Injection"
+        - "A04:2021 - Insecure Design"
+        - "A05:2021 - Security Misconfiguration"
+        - "Autre"
+    validations:
+      required: true
+
+  - type: textarea
+    id: poc
+    attributes:
+      label: Preuve de concept (PoC)
+      description: Décrivez comment reproduire la vulnérabilité (lab uniquement)
+    validations:
+      required: true
+
+  - type: textarea
+    id: remediation
+    attributes:
+      label: Remédiation proposée
+      description: Comment corriger cette vulnérabilité ?
+    validations:
+      required: false

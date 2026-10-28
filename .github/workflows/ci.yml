@@ -1,0 +1,240 @@
+name: HelpDesk DevSecOps Pipeline
+
+on:
+  push:
+    branches: ["main", "master", "secure", "dev/**", "feature/**"]
+  pull_request:
+    branches: ["main", "master", "secure"]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/helpdesk-backend
+
+jobs:
+  # ─────────────────────────────────────────────────────────────
+  # JOB 1 — Tests unitaires backend
+  # Responsable : Roua Ben Jemaa (Backend & Sécurité)
+  # ─────────────────────────────────────────────────────────────
+  tests:
+    name: "🧪 Tests Backend"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Run unit tests
+        working-directory: backend
+        env:
+          JWT_SECRET: test_jwt_secret_ci_only
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: test
+          DB_PASSWORD: test
+          DB_NAME: test
+          SECURITY_MODE: vulnerable
+        run: npm test
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: backend/test-results/
+          if-no-files-found: ignore
+
+  # ─────────────────────────────────────────────────────────────
+  # JOB 2 — Gitleaks : Détection de secrets
+  # Responsable : Roua Ben Jemaa (Sécurité)
+  # BLOQUE sur VULN-004 : JWT secret codé en dur dans server.js
+  # ─────────────────────────────────────────────────────────────
+  gitleaks:
+    name: "🔑 Gitleaks — Détection de Secrets"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Analyse tout l'historique git
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # ⚠️ ATTENDU : ce job ÉCHOUE sur la branche 'master/main'
+        # car VULN-004 contient le secret hd_fake_8f3a9c1e7b2d4f60a5c9e1b37d82f4aa
+        # Il RÉUSSIT sur la branche 'secure' où le secret est dans les variables d'env
+
+  # ─────────────────────────────────────────────────────────────
+  # JOB 3 — Semgrep : Analyse statique (SAST)
+  # Responsable : Roua Ben Jemaa (Sécurité)
+  # ─────────────────────────────────────────────────────────────
+  semgrep:
+    name: "🔍 Semgrep SAST"
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Semgrep — OWASP Top 10 + Custom Rules
+        run: |
+          semgrep scan \
+            --config p/owasp-top-ten \
+            --config p/nodejs \
+            --config p/secrets \
+            --config .semgrep.yml \
+            --severity ERROR \
+            --error \
+            --json-output semgrep-results.json \
+            --metrics=off \
+            backend/ || true
+
+      - name: Display results summary
+        if: always()
+        run: |
+          if [ -f semgrep-results.json ]; then
+            echo "=== Semgrep Results Summary ==="
+            python3 -c "
+          import json, sys
+          data = json.load(open('semgrep-results.json'))
+          results = data.get('results', [])
+          errors = [r for r in results if r.get('extra', {}).get('severity') == 'ERROR']
+          warnings = [r for r in results if r.get('extra', {}).get('severity') == 'WARNING']
+          print(f'Total findings: {len(results)}')
+          print(f'Errors (blocking): {len(errors)}')
+          print(f'Warnings: {len(warnings)}')
+          for r in results[:10]:
+              print(f\"  [{r.get('extra',{}).get('severity','?')}] {r.get('check_id','?')} — {r.get('path','?')}:{r.get('start',{}).get('line','?')}\")
+          "
+          fi
+
+      - name: Upload Semgrep results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-results
+          path: semgrep-results.json
+          if-no-files-found: ignore
+
+  # ─────────────────────────────────────────────────────────────
+  # JOB 4 — Trivy : Scan des dépendances (SCA)
+  # Responsable : Dkhil Mohamed Mahdi (DevOps)
+  # ─────────────────────────────────────────────────────────────
+  trivy-deps:
+    name: "📦 Trivy — Dépendances (SCA)"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy — Filesystem scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          scan-ref: "backend/"
+          severity: "HIGH,CRITICAL"
+          exit-code: "1"
+          ignore-unfixed: true
+          format: "sarif"
+          output: "trivy-deps.sarif"
+
+      - name: Upload Trivy SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: "trivy-deps.sarif"
+          category: "trivy-deps"
+        continue-on-error: true
+
+      - name: Upload raw results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-deps-results
+          path: trivy-deps.sarif
+          if-no-files-found: ignore
+
+  # ─────────────────────────────────────────────────────────────
+  # JOB 5 — Build image Docker + Scan Trivy image
+  # Responsable : Dkhil Mohamed Mahdi (DevOps)
+  # ─────────────────────────────────────────────────────────────
+  docker-build-scan:
+    name: "🐳 Docker Build + Trivy Image Scan"
+    runs-on: ubuntu-latest
+    needs: [tests]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: backend/
+          push: false
+          tags: helpdesk-backend:${{ github.sha }}
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Trivy scan — Image Docker
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "helpdesk-backend:${{ github.sha }}"
+          severity: "CRITICAL"
+          exit-code: "1"
+          ignore-unfixed: true
+          format: "table"
+
+      - name: Vérification — Image ne tourne pas en root
+        run: |
+          USER=$(docker inspect helpdesk-backend:${{ github.sha }} --format '{{ .Config.User }}')
+          echo "Image user: '$USER'"
+          if [ -z "$USER" ] || [ "$USER" = "root" ] || [ "$USER" = "0" ]; then
+            echo "❌ ERREUR : L'image tourne en tant que root !"
+            exit 1
+          fi
+          echo "✅ Image tourne sous l'utilisateur non-privilégié : $USER"
+
+  # ─────────────────────────────────────────────────────────────
+  # JOB 6 — Rapport de sécurité final (résumé pipeline)
+  # ─────────────────────────────────────────────────────────────
+  security-report:
+    name: "📊 Rapport de Sécurité"
+    runs-on: ubuntu-latest
+    needs: [tests, gitleaks, semgrep, trivy-deps, docker-build-scan]
+    if: always()
+    steps:
+      - name: Générer le rapport de résultats
+        run: |
+          echo "## 🔐 Rapport Pipeline DevSecOps — HelpDesk" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Statut |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🧪 Tests Backend | ${{ needs.tests.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔑 Gitleaks (Secrets) | ${{ needs.gitleaks.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔍 Semgrep SAST | ${{ needs.semgrep.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📦 Trivy Dépendances | ${{ needs.trivy-deps.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🐳 Docker Build + Scan | ${{ needs.docker-build-scan.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Déclenché par:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "> ⚠️ **Note DevSecOps :** Sur la branche \`main/master\`, les jobs Gitleaks et Trivy" >> $GITHUB_STEP_SUMMARY
+          echo "> sont attendus en ÉCHEC (démonstration des vulnérabilités VULN-001 à VULN-004)." >> $GITHUB_STEP_SUMMARY
+          echo "> La branche \`secure\` corrige ces vulnérabilités et doit passer tous les contrôles." >> $GITHUB_STEP_SUMMARY

@@ -1,4 +1,56 @@
+# Dépendances
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Variables d'environnement (secrets réels — NE JAMAIS committer)
 .env
+.env.local
+.env.production
+.env.*.local
+# Exception : .env.example est versionné (sans valeurs sensibles)
+!.env.example
+
+# Logs
 *.log
+logs/
+/tmp/
+
+# OS
 .DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Coverage et tests
+coverage/
+.nyc_output/
+test-results/
+*.lcov
+
+# Build artifacts
+dist/
+build/
+*.tgz
+
+# Docker
+.docker/
+
+# Rapports de sécurité (générés par CI — ne pas committer)
+trivy-*.sarif
+trivy-*.json
+semgrep-results.json
+gitleaks-report.json
+
+# Certificats (si ajoutés localement)
+*.pem
+*.key
+*.crt
+*.p12

@@ -1,0 +1,126 @@
+# Semgrep Custom Rules — HelpDesk DevSecOps
+# Règles ciblant précisément les 4 vulnérabilités pédagogiques
+# Responsable : Roua Ben Jemaa
+
+rules:
+
+  # ─────────────────────────────────────────────────────────────
+  # VULN-001 : SQL Injection — Concaténation de chaînes dans une requête SQL
+  # OWASP A03:2021 — Injection
+  # ─────────────────────────────────────────────────────────────
+  - id: helpdesk-sql-injection-string-concat
+    patterns:
+      - pattern: |
+          $DB.query("..." + $USER_INPUT + "...")
+      - pattern: |
+          $DB.query(`...${$USER_INPUT}...`)
+    message: |
+      VULN-001 (SQL Injection) : La requête SQL est construite par concaténation/interpolation
+      avec une entrée utilisateur non sanitisée ($USER_INPUT).
+      Utilisez des requêtes paramétrées : db.query("SELECT ... WHERE x = $1", [userInput])
+    languages: [javascript]
+    severity: ERROR
+    metadata:
+      category: security
+      owasp: "A03:2021 - Injection"
+      cwe: "CWE-89: Improper Neutralization of Special Elements used in an SQL Command"
+      confidence: HIGH
+      references:
+        - https://owasp.org/Top10/A03_2021-Injection/
+      vuln-id: VULN-001
+
+  # ─────────────────────────────────────────────────────────────
+  # VULN-002 : XSS Stocké — Usage de innerHTML avec des données non sanitisées
+  # OWASP A03:2021 — Injection
+  # ─────────────────────────────────────────────────────────────
+  - id: helpdesk-xss-innerhtml
+    patterns:
+      - pattern: $ELEMENT.innerHTML = $DATA
+      - pattern: $ELEMENT.innerHTML += $DATA
+    message: |
+      VULN-002 (XSS Stocké) : Affectation directe à innerHTML peut injecter du HTML/JS
+      arbitraire. Utilisez textContent pour les données textuelles, ou DOMPurify.sanitize()
+      si du HTML est nécessaire.
+    languages: [javascript]
+    severity: ERROR
+    metadata:
+      category: security
+      owasp: "A03:2021 - Injection"
+      cwe: "CWE-79: Improper Neutralization of Input During Web Page Generation"
+      confidence: MEDIUM
+      references:
+        - https://owasp.org/Top10/A03_2021-Injection/
+      vuln-id: VULN-002
+
+  # ─────────────────────────────────────────────────────────────
+  # VULN-004 : Secret JWT codé en dur
+  # OWASP A02:2021 — Cryptographic Failures
+  # ─────────────────────────────────────────────────────────────
+  - id: helpdesk-hardcoded-jwt-secret
+    patterns:
+      - pattern: |
+          const $SECRET = "hd_fake_..."
+      - pattern: |
+          jwt.sign($PAYLOAD, "hd_fake_...", ...)
+      - pattern: |
+          jwt.verify($TOKEN, "hd_fake_...", ...)
+    message: |
+      VULN-004 (Secret Hardcodé) : Le secret JWT est codé en dur dans le code source.
+      Utilisez les variables d'environnement : process.env.JWT_SECRET
+      Ce secret sera détecté par Gitleaks dans le pipeline CI/CD.
+    languages: [javascript]
+    severity: ERROR
+    metadata:
+      category: security
+      owasp: "A02:2021 - Cryptographic Failures"
+      cwe: "CWE-798: Use of Hard-coded Credentials"
+      confidence: HIGH
+      references:
+        - https://owasp.org/Top10/A02_2021-Cryptographic_Failures/
+      vuln-id: VULN-004
+
+  # ─────────────────────────────────────────────────────────────
+  # VULN-003 : IDOR — Absence de vérification de propriété
+  # OWASP A01:2021 — Broken Access Control
+  # ─────────────────────────────────────────────────────────────
+  - id: helpdesk-idor-missing-ownership-check
+    patterns:
+      - pattern: |
+          const result = await db.query("SELECT * FROM tickets WHERE id = $1", [$ID]);
+      - pattern-not: |
+          const result = await db.query("SELECT * FROM tickets WHERE id = $1 AND user_id = $2", [$ID, $USER_ID]);
+    message: |
+      VULN-003 (IDOR potentiel) : Récupération d'un ticket par ID sans vérification du
+      propriétaire. Ajoutez une condition user_id = $2 avec l'ID de l'utilisateur connecté,
+      ou vérifiez les permissions après la requête.
+    languages: [javascript]
+    severity: WARNING
+    metadata:
+      category: security
+      owasp: "A01:2021 - Broken Access Control"
+      cwe: "CWE-639: Authorization Bypass Through User-Controlled Key"
+      confidence: LOW
+      references:
+        - https://owasp.org/Top10/A01_2021-Broken_Access_Control/
+      vuln-id: VULN-003
+
+  # ─────────────────────────────────────────────────────────────
+  # Règle générale : console.log avec des données potentiellement sensibles
+  # ─────────────────────────────────────────────────────────────
+  - id: helpdesk-no-sensitive-logging
+    patterns:
+      - pattern: console.log($MSG, $DATA)
+      - pattern-either:
+          - pattern: console.log("password", ...)
+          - pattern: console.log("token", ...)
+          - pattern: console.log("secret", ...)
+    message: |
+      Ne loggez pas de données sensibles (mots de passe, tokens, secrets) en production.
+      Utilisez un logger structuré avec filtrage des données sensibles.
+    languages: [javascript]
+    severity: WARNING
+    metadata:
+      category: security
+      owasp: "A09:2021 - Security Logging and Monitoring Failures"
+      cwe: "CWE-532: Insertion of Sensitive Information into Log File"
+      confidence: LOW

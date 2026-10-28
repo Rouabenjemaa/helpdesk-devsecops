@@ -1,0 +1,55 @@
+# Gitleaks Configuration — HelpDesk DevSecOps
+# Détecte les secrets hardcodés, y compris VULN-004
+# Responsable : Roua Ben Jemaa
+
+title = "HelpDesk Gitleaks Configuration"
+
+[extend]
+# Étend les règles par défaut de Gitleaks
+useDefault = true
+
+[[rules]]
+id = "helpdesk-jwt-secret-vuln004"
+description = "VULN-004 : Secret JWT HelpDesk codé en dur (pédagogique)"
+regex = '''hd_fake_[a-f0-9]{32}'''
+tags = ["jwt", "secret", "VULN-004", "hardcoded", "CWE-798"]
+severity = "CRITICAL"
+
+  [rules.allowlist]
+  description = "Exclure la documentation et les fichiers de config de démonstration"
+  paths = [
+    '''docs/failles\.md''',
+    '''\.gitleaks\.toml''',
+    '''README\.md''',
+  ]
+
+[[rules]]
+id = "generic-jwt-secret"
+description = "Secret JWT générique potentiellement hardcodé"
+regex = '''(?i)(jwt[_\-]?secret|jwt[_\-]?key)\s*[=:]\s*['"]([a-zA-Z0-9_\-]{20,})['"]'''
+tags = ["jwt", "secret", "CWE-798"]
+severity = "HIGH"
+
+  [rules.allowlist]
+  description = "Exclure les fichiers d'exemple"
+  paths = [
+    '''\.env\.example''',
+    '''README\.md''',
+  ]
+
+[allowlist]
+description = "Allowlist globale"
+paths = [
+  '''\.env\.example''',
+  '''node_modules''',
+  '''\.git''',
+]
+commits = []
+regexes = [
+  # Exclure les références aux variables d'environnement (pas des vrais secrets)
+  '''process\.env\.[A-Z_]+''',
+  # Exclure les placeholders
+  '''<your[_\-]?[a-z_]+>''',
+  '''CHANGE[_\-]?ME''',
+  '''REPLACE[_\-]?ME''',
+]

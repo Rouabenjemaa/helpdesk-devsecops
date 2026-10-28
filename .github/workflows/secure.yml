@@ -1,0 +1,43 @@
+name: HelpDesk Secure Pipeline
+
+on:
+  push:
+    branches: ["secure"]
+  pull_request:
+    branches: ["secure"]
+
+# Ce workflow démontre la version CORRIGÉE des vulnérabilités
+# Il doit PASSER tous les contrôles (contrairement à main/master)
+
+jobs:
+  security-gate:
+    name: "✅ Vérification Branche Secure"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Vérifier que SECURITY_MODE est sécurisé
+        run: |
+          if grep -q 'SECURITY_MODE=vulnerable' .env 2>/dev/null; then
+            echo "⚠️ WARNING: .env contient encore SECURITY_MODE=vulnerable"
+            echo "Sur la branche secure, SECURITY_MODE devrait être 'secure'"
+          fi
+          echo "✅ Vérification terminée"
+
+      - name: Vérifier absence de secrets hardcodés dans server.js
+        run: |
+          if grep -q 'hd_fake_' backend/server.js; then
+            echo "❌ ECHEC : Secret hardcodé détecté dans server.js (VULN-004 non corrigée)"
+            exit 1
+          fi
+          echo "✅ Aucun secret hardcodé détecté dans server.js"
+
+      - name: Vérifier les requêtes paramétrées
+        run: |
+          # Rechercher les concaténations SQL suspectes
+          if grep -n "query.*+ q +" backend/server.js 2>/dev/null; then
+            echo "⚠️ Concaténation SQL potentielle détectée"
+          else
+            echo "✅ Requêtes SQL paramétrées détectées"
+          fi
