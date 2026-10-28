@@ -1264,7 +1264,6 @@
     // État global de l'application
     let authToken = localStorage.getItem('hd_token') || '';
     let currentUser = JSON.parse(localStorage.getItem('hd_user') || 'null');
-    let currentSecurityMode = 'vulnerable';
     let currentTicketsList = [];
     let currentActiveTicketId = null;
     let notifIntervalId = null;
@@ -1274,7 +1273,6 @@
 
     // Initialisation
     window.addEventListener('DOMContentLoaded', async () => {
-      await fetchSecurityMode();
       if (authToken && currentUser) {
         setupAuthenticatedUI();
       } else {
@@ -1303,55 +1301,6 @@
       } catch (err) {
         showToast(err.message, 'error');
         throw err;
-      }
-    }
-
-    // Gestion du mode de sécurité
-    async function fetchSecurityMode() {
-      try {
-        const res = await fetch('/api/security-mode');
-        const d = await res.json();
-        currentSecurityMode = d.mode;
-        updateSecurityBadgeUI();
-      } catch (e) {
-        console.error('Erreur récupération security-mode:', e);
-      }
-    }
-
-    function updateSecurityBadgeUI() {
-      // Le mode de sécurité est géré en arrière-plan sans polluer l'interface utilisateur
-    }
-
-    async function toggleSecurityMode() {
-      const newMode = currentSecurityMode === 'vulnerable' ? 'secure' : 'vulnerable';
-      if (!authToken || currentUser?.role !== 'admin') {
-        showToast('Bascule de mode : connectez-vous en admin pour persister la bascule serveur, ou utilisez le test en cours.', 'info');
-      }
-      try {
-        const res = await api('/security-mode', { method: 'POST', body: JSON.stringify({ mode: newMode }) });
-        if (res && res.ok) {
-          currentSecurityMode = res.mode;
-          updateSecurityBadgeUI();
-          showToast(`Mode basculé vers : ${newMode.toUpperCase()}`, 'success');
-          if (currentActiveTicketId) loadTicketDetail(currentActiveTicketId);
-        }
-      } catch (e) {
-        // En mode labo local sans admin connecté, mise à jour visuelle pour test
-        currentSecurityMode = newMode;
-        updateSecurityBadgeUI();
-        showToast(`Mode local basculé vers : ${newMode.toUpperCase()}`, 'warning');
-      }
-    }
-
-    function toggleLabContent() {
-      const content = $('labContent');
-      const icon = $('labToggleIcon');
-      if (content.style.display === 'none') {
-        content.style.display = 'grid';
-        icon.textContent = '▼';
-      } else {
-        content.style.display = 'none';
-        icon.textContent = '▲';
       }
     }
 
@@ -1682,9 +1631,8 @@
         const li = document.createElement('li');
         li.className = 'comment-card';
 
-        // FAILLE 2 (Stored XSS) :
-        // Si le mode est 'vulnerable', on injecte le corps directement en innerHTML (reproduction de la faille S1).
-        // Si le mode est 'secure', on utilise textContent pour neutraliser tout script / balise HTML.
+        // FAILLE 2 (VULN-002, XSS stocké) : le corps du commentaire est injecté en innerHTML,
+        // sans aucun encodage (volontaire en phase 1).
         const headerHtml = `
           <div class="comment-header">
             <strong>${escapeHtml(c.author_name || c.author)} <span class="role-badge role-${c.author_role || 'user'}">${c.author_role || 'user'}</span></strong>
@@ -1692,17 +1640,7 @@
           </div>
         `;
 
-        if (currentSecurityMode === 'vulnerable') {
-          // Injection directe pour démonstration pédagogique
-          li.innerHTML = headerHtml + `<div class="comment-body">${c.body}</div>`;
-        } else {
-          // Sécurisé : encodage strict
-          li.innerHTML = headerHtml;
-          const bodyDiv = document.createElement('div');
-          bodyDiv.className = 'comment-body';
-          bodyDiv.textContent = c.body;
-          li.appendChild(bodyDiv);
-        }
+        li.innerHTML = headerHtml + `<div class="comment-body">${c.body}</div>`;
 
         commentsList.appendChild(li);
       });

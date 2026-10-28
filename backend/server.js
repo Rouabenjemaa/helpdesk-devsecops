@@ -1,6 +1,6 @@
 /**
  * =============================================================================
- * HelpDesk DevSecOps - Serveur Backend Express (Jalon S1)
+ * HelpDesk DevSecOps - Serveur Backend Express (Phases 0 et 1 : application VOLONTAIREMENT VULNERABLE)
  * TEK-UP University - Module DevSecOps - ING-5-SSIR
  * Binôme : Ben Jemaa Roua (Backend & Sécurité) & Dkhil Mohamed Mahdi (Frontend & DevOps)
  * =============================================================================
@@ -9,27 +9,29 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const path = require('path');
 const { Pool } = require('pg');
 
 const app = express();
 app.use(express.json());
 
-// =============================================================================
-// GESTION DU MODE DE SÉCURITÉ (Pédagogique vs Sécurisé)
-// =============================================================================
-// Permet de démontrer le cycle complet DevSecOps :
-// 1. Mode 'vulnerable' : reproduction contrôlée des 4 failles pour le laboratoire.
-// 2. Mode 'secure' : application des correctifs et validation des non-régressions.
-let SECURITY_MODE = process.env.SECURITY_MODE || 'vulnerable';
+// Phase 1 : le backend sert aussi l'interface et accepte le préfixe /api, comme le ferait
+// le reverse proxy nginx (phase 2). Ainsi `npm start` suffit : http://localhost:3000
+app.use((req, res, next) => {
+  if (req.url.startsWith('/api/')) req.url = req.url.slice(4);
+  next();
+});
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
+});
 
-// FAILLE 4 (Secret fictif exposé dans le code) :
-// Mode vulnérable : secret codé en dur détectable par Gitleaks.
-// Mode sécurisé : secret chargé depuis la variable d'environnement ou Secret K8s.
+// =============================================================================
+// FAILLE 4 (VULN-004) : secret JWT fictif CODÉ EN DUR dans le dépôt.
+// Volontaire (phase 1). Il sera détecté par Gitleaks (phase 3) puis remplacé
+// par une variable d'environnement / un Secret Kubernetes (phase 4).
+// =============================================================================
 const VULNERABLE_JWT_SECRET = 'hd_fake_8f3a9c1e7b2d4f60a5c9e1b37d82f4aa';
 function getJwtSecret() {
-  if (SECURITY_MODE === 'secure') {
-    return process.env.JWT_SECRET || 'secure_runtime_key_tekup_devsecops_2026';
-  }
   return VULNERABLE_JWT_SECRET;
 }
 
@@ -48,13 +50,6 @@ const pool = new Pool({
 app.use((req, res, next) => {
   const start = Date.now();
 
-  // En mode sécurisé, application des en-têtes de durcissement (CSP, HSTS fictif, X-Frame-Options)
-  if (SECURITY_MODE === 'secure') {
-    res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self';");
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'DENY');
-  }
-
   res.on('finish', () => {
     const duration = Date.now() - start;
     const logEntry = {
@@ -67,7 +62,6 @@ app.use((req, res, next) => {
       role: req.user ? req.user.role : null,
       status: res.statusCode,
       duration_ms: duration,
-      security_mode: SECURITY_MODE,
     };
     console.log(JSON.stringify(logEntry));
   });
@@ -155,7 +149,6 @@ app.get('/health', async (req, res) => {
       database: 'connected',
       uptime: process.uptime(),
       timestamp: new Date().toISOString(),
-      security_mode: SECURITY_MODE,
       version: '1.0.0',
     });
   } catch (err) {
@@ -165,39 +158,6 @@ app.get('/health', async (req, res) => {
       error: err.message,
     });
   }
-});
-
-// Consultation et bascule du mode de sécurité (laboratoire pédagogique)
-app.get('/security-mode', (req, res) => {
-  res.json({
-    mode: SECURITY_MODE,
-    description: SECURITY_MODE === 'vulnerable'
-      ? 'Mode Pédagogique (Vulnérabilités VULN-001 à VULN-004 actives pour démonstration)'
-      : 'Mode Sécurisé (Correctifs appliqués : requêtes paramétrées, XSS filtré, IDOR bloqué, Secret protégé)',
-    vulnerabilities: {
-      'VULN-001': { name: 'SQL Injection', status: SECURITY_MODE === 'vulnerable' ? 'VULNERABLE' : 'SECURED' },
-      'VULN-002': { name: 'Stored XSS', status: SECURITY_MODE === 'vulnerable' ? 'VULNERABLE' : 'SECURED' },
-      'VULN-003': { name: 'IDOR', status: SECURITY_MODE === 'vulnerable' ? 'VULNERABLE' : 'SECURED' },
-      'VULN-004': { name: 'Exposed JWT Secret', status: SECURITY_MODE === 'vulnerable' ? 'VULNERABLE' : 'SECURED' },
-    },
-  });
-});
-
-app.post('/security-mode', auth, requireRole('admin'), async (req, res) => {
-  const { mode } = req.body;
-  if (!['vulnerable', 'secure'].includes(mode)) {
-    return res.status(400).json({ error: "Mode invalide. Choisissez 'vulnerable' ou 'secure'." });
-  }
-  const oldMode = SECURITY_MODE;
-  SECURITY_MODE = mode;
-  await logAudit(
-    req.user.id,
-    req.user.username,
-    'SECURITY_MODE_CHANGE',
-    `Bascule du mode de sécurité de '${oldMode}' vers '${mode}'`,
-    req.ip
-  );
-  res.json({ ok: true, mode: SECURITY_MODE });
 });
 
 // =============================================================================
@@ -313,9 +273,7 @@ app.get('/tickets', auth, async (req, res) => {
 });
 
 // GET /tickets/:id : Détail d'un ticket avec commentaires et historique
-// FAILLE 3 (IDOR) :
-// - Mode 'vulnerable' : n'effectue aucun contrôle du propriétaire. Roua peut lire les tickets de Mahdi.
-// - Mode 'secure' : vérifie que l'utilisateur est soit propriétaire, soit agent, soit admin.
+// FAILLE 3 (IDOR) : aucun contrôle du propriétaire. Roua peut lire les tickets de Mahdi.
 app.get('/tickets/:id', auth, async (req, res) => {
   const ticketId = parseInt(req.params.id, 10);
   if (isNaN(ticketId)) return res.status(400).json({ error: 'Identifiant de ticket invalide' });
@@ -332,27 +290,10 @@ app.get('/tickets/:id', auth, async (req, res) => {
     const ticket = t.rows[0];
     if (!ticket) return res.status(404).json({ error: 'Ticket introuvable' });
 
-    // Contrôle d'autorisation IDOR
-    if (SECURITY_MODE === 'secure') {
-      const isOwner = ticket.owner_id === req.user.id;
-      const isStaff = req.user.role === 'agent' || req.user.role === 'admin';
-      if (!isOwner && !isStaff) {
-        await logAudit(
-          req.user.id,
-          req.user.username,
-          'IDOR_ATTEMPT_BLOCKED',
-          `Tentative d'accès non autorisé au ticket #${ticketId} appartenant à l'utilisateur #${ticket.owner_id}`,
-          req.ip
-        );
-        return res.status(403).json({
-          error: 'Accès interdit : vous n\'avez pas l\'autorisation de consulter ce ticket.',
-        });
-      }
-    } else {
-      // Mode vulnérable : trace de l'accès illégitime dans les logs du labo
-      if (ticket.owner_id !== req.user.id && req.user.role === 'user') {
-        console.warn(`[VULN-003 IDOR EXPLOITÉ] User #${req.user.id} (${req.user.username}) a accédé au ticket #${ticketId} de User #${ticket.owner_id}`);
-      }
+    // FAILLE 3 (VULN-003, IDOR) : AUCUN contrôle du propriétaire (volontaire).
+    // Un 'user' peut lire le ticket d'un autre en changeant l'identifiant dans l'URL.
+    if (ticket.owner_id !== req.user.id && req.user.role === 'user') {
+      console.warn(`[VULN-003 IDOR EXPLOITÉ] User #${req.user.id} (${req.user.username}) a accédé au ticket #${ticketId} de User #${ticket.owner_id}`);
     }
 
     // Récupération des commentaires
@@ -493,7 +434,6 @@ app.patch('/tickets/:id/status', auth, requireRole('agent'), async (req, res) =>
 // POST /tickets/:id/comments : Ajout d'un commentaire
 // FAILLE 2 (XSS stocké côté stockage) :
 // Le corps du commentaire est enregistré tel quel en base.
-// En mode sécurisé, nous pouvons sanitizer ou échapper, et l'affichage frontend utilise textContent.
 app.post('/tickets/:id/comments', auth, async (req, res) => {
   const ticketId = parseInt(req.params.id, 10);
   const { body } = req.body;
@@ -511,16 +451,8 @@ app.post('/tickets/:id/comments', auth, async (req, res) => {
       return res.status(403).json({ error: 'Vous ne pouvez commenter que vos propres tickets' });
     }
 
-    let commentBody = body;
-    // Si mode sécurisé actif, désamorçage de tags HTML dangereux côté backend également
-    if (SECURITY_MODE === 'secure') {
-      commentBody = commentBody
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
+    // FAILLE 2 (VULN-002, XSS stocké) : le commentaire est stocké tel quel, sans aucun encodage.
+    const commentBody = body;
 
     await pool.query(
       'INSERT INTO comments (ticket_id, author_id, body) VALUES ($1, $2, $3)',
@@ -560,49 +492,28 @@ app.post('/tickets/:id/comments', auth, async (req, res) => {
 });
 
 // GET /search?q= : Recherche de tickets
-// FAILLE 1 (Injection SQL) :
-// - Mode 'vulnerable' : concaténation directe de `q` dans la requête SQL (`' OR 1=1 --`).
-// - Mode 'secure' : requête paramétrée avec `$1`, `$2`, `$3` et ILIKE.
+// FAILLE 1 (VULN-001, Injection SQL) : `q` est concaténé directement dans la requête
+// SQL (payload de démonstration : ' OR 1=1 --). Volontaire en phase 1.
 app.get('/search', auth, async (req, res) => {
   const q = req.query.q || '';
   const isAgentOrAdmin = req.user.role === 'agent' || req.user.role === 'admin';
 
-  if (SECURITY_MODE === 'vulnerable') {
-    // Construction vulnérable obligatoire pour démonstration pédagogique
-    const scope = isAgentOrAdmin ? 'TRUE' : 't.owner_id=' + Number(req.user.id);
-    const sql = `
-      SELECT t.id, t.title, t.description, t.status, t.priority, t.category, t.created_at,
-             u.username AS owner_username
-      FROM tickets t
-      JOIN users u ON u.id = t.owner_id
-      WHERE ${scope} AND t.title ILIKE '%${q}%'
-      ORDER BY t.id
-    `;
-    try {
-      const r = await pool.query(sql);
-      res.json(r.rows);
-    } catch (e) {
-      // Retourne l'erreur SQL complète (information disclosure en mode vulnérable)
-      res.status(500).json({ error: e.message, query_executed: sql });
-    }
-  } else {
-    // Construction sécurisée (requête paramétrée)
-    const sql = `
-      SELECT t.id, t.title, t.description, t.status, t.priority, t.category, t.created_at,
-             u.username AS owner_username
-      FROM tickets t
-      JOIN users u ON u.id = t.owner_id
-      WHERE (t.owner_id = $1 OR $2 = true)
-        AND (t.title ILIKE $3 OR t.description ILIKE $3)
-      ORDER BY t.id
-    `;
-    try {
-      const r = await pool.query(sql, [req.user.id, isAgentOrAdmin, `%${q}%`]);
-      res.json(r.rows);
-    } catch (e) {
-      console.error('Erreur recherche sécurisée:', e.message);
-      res.status(500).json({ error: 'Erreur lors de la recherche' });
-    }
+  // Construction vulnérable obligatoire pour démonstration pédagogique
+  const scope = isAgentOrAdmin ? 'TRUE' : 't.owner_id=' + Number(req.user.id);
+  const sql = `
+    SELECT t.id, t.title, t.description, t.status, t.priority, t.category, t.created_at,
+           u.username AS owner_username
+    FROM tickets t
+    JOIN users u ON u.id = t.owner_id
+    WHERE ${scope} AND t.title ILIKE '%${q}%'
+    ORDER BY t.id
+  `;
+  try {
+    const r = await pool.query(sql);
+    res.json(r.rows);
+  } catch (e) {
+    // Retourne l'erreur SQL complète (information disclosure en mode vulnérable)
+    res.status(500).json({ error: e.message, query_executed: sql });
   }
 });
 
@@ -966,7 +877,7 @@ async function seedDatabase() {
 const PORT = process.env.PORT || 3000;
 seedDatabase().then(() => {
   app.listen(PORT, () => {
-    console.log(`helpdesk-backend démarré sur :${PORT} [Mode sécurité: ${SECURITY_MODE}]`);
+    console.log(`helpdesk-backend démarré sur :${PORT} (phases 0-1 : mode vulnérable)`);
   });
 }).catch((err) => {
   console.error('Échec démarrage backend:', err);

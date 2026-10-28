@@ -1,4 +1,4 @@
-# Dossier des Vulnérabilités Volontaires et Correctifs — HelpDesk DevSecOps
+# Dossier des Vulnérabilités Volontaires — HelpDesk DevSecOps (phases 0-1)
 
 **Projet :** HelpDesk — Plateforme de tickets d'incident  
 **Module :** DevSecOps · ING-5-SSIR · TEK-UP University  
@@ -8,13 +8,13 @@
 
 ## Synthèse Générale
 
-| Identifiant | Vulnérabilité | OWASP Top 10 | STRIDE | Emplacement | Statut Pédagogique | Statut Sécurisé |
-|---|---|---|---|---|---|---|
-| **VULN-001** | Injection SQL (SQLi) | A03:2021 – Injection | Tampering, Information Disclosure | `GET /search?q=` dans `backend/server.js` | Démontré avec `' OR 1=1 --` | Requêtes paramétrées `$1` |
-| **VULN-002** | Cross-Site Scripting (XSS) stocké | A03:2021 – Injection | Tampering | Affichage des commentaires dans `frontend/index.html` | Exécution de payload JavaScript | `textContent`, encodage entités & CSP |
-| **VULN-003** | Insecure Direct Object Reference (IDOR) | A01:2021 – Broken Access Control | Information Disclosure, Elevation of Privilege | `GET /tickets/:id` dans `backend/server.js` | Roua lit le ticket #3 de Mahdi | Contrôle propriétaire ou rôle agent/admin |
-| **VULN-004** | Secret JWT fictif exposé en clair | A02:2021 – Cryptographic Failures / A05:2021 – Security Misconfiguration | Information Disclosure | Constante `VULNERABLE_JWT_SECRET` dans `backend/server.js` | Détectable par Gitleaks | Injection par variable d'environnement & Secret K8s |
-| **BONUS** | Dépendances vulnérables | A06:2021 – Vulnerable and Outdated Components | Tampering | `backend/package.json` | Versions initiales obsolètes | Analyse Trivy & mise à niveau |
+| Identifiant | Vulnérabilité | OWASP Top 10 | STRIDE | Emplacement | Statut Pédagogique |
+|---|---|---|---|---|---|
+| **VULN-001** | Injection SQL (SQLi) | A03:2021 – Injection | Tampering, Information Disclosure | `GET /search?q=` dans `backend/server.js` | Démontré avec `' OR 1=1 --` |
+| **VULN-002** | Cross-Site Scripting (XSS) stocké | A03:2021 – Injection | Tampering | Affichage des commentaires dans `frontend/index.html` | Exécution de payload JavaScript |
+| **VULN-003** | Insecure Direct Object Reference (IDOR) | A01:2021 – Broken Access Control | Information Disclosure, Elevation of Privilege | `GET /tickets/:id` dans `backend/server.js` | Roua lit le ticket #3 de Mahdi |
+| **VULN-004** | Secret JWT fictif exposé en clair | A02:2021 – Cryptographic Failures / A05:2021 – Security Misconfiguration | Information Disclosure | Constante `VULNERABLE_JWT_SECRET` dans `backend/server.js` | Détectable par Gitleaks |
+| **BONUS** | Dépendances vulnérables | A06:2021 – Vulnerable and Outdated Components | Tampering | `backend/package.json` | Versions initiales obsolètes |
 
 ---
 
@@ -52,26 +52,8 @@ curl -s -G "http://localhost:8080/api/search" --data-urlencode "q=' OR 1=1 --" \
 # Roua récupère TOUS les tickets de la base, y compris le ticket RH confidentiel de Mahdi (#3).
 ```
 
-### 1.4 Correctif Appliqué (Mode Sécurisé)
-Remplacement de la concaténation brute par une requête paramétrée préparée par le pilote PostgreSQL :
-```javascript
-// Mode sécurisé
-const sql = `
-  SELECT t.id, t.title, t.description, t.status, t.priority, t.category, t.created_at,
-         u.username AS owner_username
-  FROM tickets t
-  JOIN users u ON u.id = t.owner_id
-  WHERE (t.owner_id = $1 OR $2 = true)
-    AND (t.title ILIKE $3 OR t.description ILIKE $3)
-  ORDER BY t.id
-`;
-const r = await pool.query(sql, [req.user.id, isAgentOrAdmin, `%${q}%`]);
-```
-
-### 1.5 Test Après Correction
-En relançant la même requête avec `q=' OR 1=1 --`, le paramètre `$3` reçoit la chaîne littérale `%' OR 1=1 --%`. Le moteur SQL recherche un ticket dont le titre contient textuellement ces caractères. La tentative d'injection ne retourne aucun ticket non autorisé.
-
----
+### 1.4 Correctif
+À réaliser plus tard (phase 5 ; rotation du secret en phase 4). Non implémenté en phase 1 : l'application reste volontairement vulnérable.
 
 ## 2. VULN-002 — Cross-Site Scripting (XSS) Stocké
 
@@ -98,22 +80,8 @@ li.innerHTML = headerHtml + `<div class="comment-body">${c.body}</div>`;
 2. Se déconnecter et se connecter en tant qu'agent (`agent1`).
 3. Ouvrir le ticket en question : la boîte de dialogue d'alerte JavaScript s'affiche immédiatement dans la session de l'agent.
 
-### 2.4 Correctif Appliqué (Mode Sécurisé)
-1. **Frontend** : Utilisation stricte de `textContent` (ou `innerText`) pour traiter le contenu comme du texte brut :
-```javascript
-// Mode sécurisé
-const bodyDiv = document.createElement('div');
-bodyDiv.className = 'comment-body';
-bodyDiv.textContent = c.body;
-li.appendChild(bodyDiv);
-```
-2. **Backend** : Échappement des caractères HTML sensibles (`<`, `>`, `&`, `"`, `'`) avant persistance.
-3. **En-têtes HTTP** : Envoi de l'en-tête `Content-Security-Policy` bloquant l'exécution de scripts en ligne non autorisés.
-
-### 2.5 Test Après Correction
-Le commentaire contenant `<img src=x onerror=...>` est affiché textuellement à l'écran sous la forme brute sans qu'aucune requête réseau vers l'image cassée ni aucun script JavaScript ne s'exécute.
-
----
+### 2.4 Correctif
+À réaliser plus tard (phase 5 ; rotation du secret en phase 4). Non implémenté en phase 1 : l'application reste volontairement vulnérable.
 
 ## 3. VULN-003 — Insecure Direct Object Reference (IDOR)
 
@@ -137,23 +105,8 @@ curl -s "http://localhost:8080/api/tickets/3" -H "Authorization: Bearer $ROUA_TO
 # Résultat : l'API renvoie le ticket #3 complet avec ses commentaires et son historique confidentiel.
 ```
 
-### 3.4 Correctif Appliqué (Mode Sécurisé)
-Vérification d'autorisation côté serveur :
-```javascript
-if (SECURITY_MODE === 'secure') {
-  const isOwner = ticket.owner_id === req.user.id;
-  const isStaff = req.user.role === 'agent' || req.user.role === 'admin';
-  if (!isOwner && !isStaff) {
-    await logAudit(req.user.id, req.user.username, 'IDOR_ATTEMPT_BLOCKED', `Tentative d'accès au ticket #${ticketId}`, req.ip);
-    return res.status(403).json({ error: "Accès interdit : vous n'avez pas l'autorisation de consulter ce ticket." });
-  }
-}
-```
-
-### 3.5 Test Après Correction
-En relançant la requête avec le jeton de Roua sur le ticket #3, l'API renvoie un code HTTP `403 Forbidden` et enregistre l'événement dans le journal d'audit `audit_log`. Seul Mahdi ou les membres du support (agents/administrateurs) peuvent y accéder.
-
----
+### 3.4 Correctif
+À réaliser plus tard (phase 5 ; rotation du secret en phase 4). Non implémenté en phase 1 : l'application reste volontairement vulnérable.
 
 ## 4. VULN-004 — Secret JWT Fictif Exposé dans le Code
 
@@ -174,19 +127,5 @@ const VULNERABLE_JWT_SECRET = 'hd_fake_8f3a9c1e7b2d4f60a5c9e1b37d82f4aa';
 ### 4.3 Scénario de Détection & Preuve Avant Correction
 L'exécution de l'outil Gitleaks dans le pipeline CI/CD (prévu au jalon S2) identifie immédiatement la présence du faux secret et bloque le pipeline avec un code de sortie non nul.
 
-### 4.4 Procédure de Rotation & Correctif (Mode Sécurisé)
-1. **Remplacement immédiat du secret** : Injection du secret à l'exécution via la variable d'environnement `JWT_SECRET` (dans le `.env` local non versionné ou un Secret Kubernetes hors dépôt).
-2. **Fonction de récupération dynamique** :
-```javascript
-function getJwtSecret() {
-  if (SECURITY_MODE === 'secure') {
-    return process.env.JWT_SECRET || 'secure_runtime_key_tekup_devsecops_2026';
-  }
-  return VULNERABLE_JWT_SECRET;
-}
-```
-3. **Nettoyage de l'historique** : Purge des commits contenant le secret fictif et réexécution de Gitleaks pour confirmer l'absence de secret.
-
-### 4.5 Test Après Correction
-Gitleaks valide l'absence de tout secret dans le dépôt Git et le pipeline passe avec succès.
-
+### 4.4 Correctif
+À réaliser plus tard (phase 5 ; rotation du secret en phase 4). Non implémenté en phase 1 : l'application reste volontairement vulnérable.

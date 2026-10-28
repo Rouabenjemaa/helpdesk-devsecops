@@ -1,225 +1,69 @@
-# HelpDesk DevSecOps — Plateforme de Tickets d'Incident (Jalon S1)
+# HelpDesk DevSecOps — Phases 0 et 1 (application volontairement vulnérable)
 
-[![Module](https://img.shields.io/badge/Module-DevSecOps-blue.svg)](https://tek-up.de/)
-[![Formation](https://img.shields.io/badge/Formation-ING--5--SSIR-orange.svg)](https://tek-up.de/)
-[![Université](https://img.shields.io/badge/Université-TEK--UP-red.svg)](https://tek-up.de/)
-[![Mode](https://img.shields.io/badge/Mode-Double%20(Vulnérable%20%2F%20Sécurisé)-green.svg)](#)
+Projet académique — Module DevSecOps, TEK-UP University (ING-5-SSIR).
+Binôme : **Ben Jemaa Roua** (backend, base de données, failles) · **Dkhil Mohamed Mahdi** (frontend, architecture, rapport).
 
-> **Projet académique :** Module DevSecOps — TEK-UP University (Année 2026)  
-> **Binôme :**  
-> - **Ben Jemaa Roua** : Backend Express, PostgreSQL, failles initiales, correctifs, Dockerfile, pipeline CI/CD, rotation des secrets  
-> - **Dkhil Mohamed Mahdi** : Frontend UI/UX, Docker Compose, architecture, kind, Trivy, Kubernetes, DAST, observabilité, réponse à incident  
+> Cette branche (`phase-0-1`) ne contient **que** ce qui relève des phases 0 et 1 : l'application, sa base PostgreSQL, ses 4 failles volontaires et leurs preuves.
+> Aucune faille n'est corrigée ici. Conteneurisation, CI/CD, correctifs, Kubernetes, DAST et observabilité viennent dans les phases suivantes.
 
----
+## Démarrage
 
-## 1. Présentation de la Plateforme
-
-**HelpDesk** est une application web 3-tiers conçue pour illustrer l'intégralité du cycle de vie sécurisé (**SecDevOps**) :
-1. **Écrire & Modéliser** : Conception d'une application multi-rôles avec modèle de menace STRIDE et 4 vulnérabilités intentionnelles documentées.
-2. **Construire & Durcir** : Conteneurisation minimale multi-stage sur Alpine Linux avec exécution sans privilèges root (`USER 10001`).
-3. **Tester & Bloquer** : Pipeline CI/CD automatisé bloquant toute livraison non conforme (Semgrep, Gitleaks, Trivy, Tests unitaires).
-4. **Déployer & Segmenter** : Déploiement sur Kubernetes local (`kind`) durci avec `securityContext` restrictif et `NetworkPolicy`.
-5. **Observer & Réagir** : Supervision Prometheus/Loki/Grafana, détection d'attaque fictive et plan de réponse à incident.
-
----
-
-## 2. Architecture Technique (Jalon S1)
-
-```
-                            [Poste Navigateur Web]
-                                       │
-                               HTTP sur :8080
-                                       ▼
-                  ┌────────────────────────────────────────┐
-                  │          frontend (Nginx)              │
-                  │  nginxinc/nginx-unprivileged:alpine    │
-                  │  - Reverse Proxy sur /api/             │
-                  │  - Interface Responsive SPA            │
-                  └───────────────────┬────────────────────┘
-                                      │ Proxy HTTP :3000
-                                      ▼
-                  ┌────────────────────────────────────────┐
-                  │          backend (Node.js)             │
-                  │  node:20-alpine (USER 10001:10001)     │
-                  │  - Authentification JWT & RBAC         │
-                  │  - Double mode : Vulnérable / Sécurisé │
-                  │  - Journalisation JSON & Audit Log     │
-                  └───────────────────┬────────────────────┘
-                                      │ Pool PostgreSQL :5432
-                                      ▼
-                  ┌────────────────────────────────────────┐
-                  │            db (PostgreSQL)             │
-                  │  postgres:16-alpine (helpdesk-db)      │
-                  │  - Users, Tickets, Comments            │
-                  │  - Notifications, History, Audit       │
-                  └────────────────────────────────────────┘
-```
-
----
-
-## 3. Démarrage Rapide
-
-### Prérequis
-- Docker et Docker Compose installés sur votre machine.
-
-### Instructions de Lancement
-```bash
-# 1. Cloner ou ouvrir le dossier du projet
-cd c:\projets\helpdesk
-
-# 2. Préparer le fichier d'environnement local (données fictives)
-cp .env.example .env
-
-# 3. Construire et démarrer l'ensemble des conteneurs
-docker compose up --build
-```
-
-L'application est immédiatement accessible sur : **`http://localhost:8080`**  
-La sonde de santé de l'API est interrogeable sur : **`http://localhost:8080/api/health`**
-
----
-
-## 4. Comptes de Test et Espaces Métier
-
-Tous les comptes de démonstration utilisent le mot de passe fictif : **`Passw0rd!`**
-
-| Rôle | Identifiant | Nom | Permissions & Espaces |
-|---|---|---|---|
-| **`user`** | `roua` | Roua Ben Jemaa | Déclaration de tickets, suivi de ses tickets personnels, commentaires, notifications personnelles. |
-| **`user`** | `mahdi` | Mahdi Dkhil | Deuxième utilisateur fictif (permet la démonstration de l'IDOR et de l'isolation des données). |
-| **`user`** | `charlie` | Charlie Martin | Utilisateur ayant déclaré le ticket de sécurité (#5). |
-| **`agent`** | `agent1` | Agent Un | File d'attente globale, filtrage des incidents critiques, changement de statut (`open` &rarr; `in_progress` &rarr; `closed`), commentaires de prise en charge. |
-| **`admin`** | `admin1` | Administrateur IT | Métriques globales, création et désactivation de comptes utilisateurs, journal d'audit de sécurité, contrôle du mode de sécurité. |
-
-> 💡 **Astuce Démo :** Sur la page de connexion, des boutons à 1-clic permettent de préremplir instantanément les identifiants pour Roua, Mahdi, Agent 1 et Admin 1.
-
----
-
-## 5. Démonstration des 4 Vulnérabilités Pédagogiques
-
-L'application intègre un **sélecteur de mode** (accessible via l'interface web ou la variable `SECURITY_MODE=vulnerable|secure`) permettant de prouver l'existence des failles puis la validité de leurs correctifs.
-
-### Faille 1 — Injection SQL (A03 Injection)
-- **Emplacement :** `GET /search?q=` dans `backend/server.js`
-- **Scénario :** Connecté en `roua`, rechercher un ticket avec la charge utile `' OR 1=1 --`.
-- **Preuve en ligne de commande :**
-```bash
-# 1. Connexion en tant que Roua
-TOKEN=$(curl -s -X POST http://localhost:8080/api/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"roua","password":"Passw0rd!"}' | sed 's/.*"token":"\([^"]*\)".*/\1/')
-
-# 2. Recherche normale (ne retourne que les tickets de Roua)
-curl -s -G "http://localhost:8080/api/search" --data-urlencode "q=VPN" -H "Authorization: Bearer $TOKEN"
-
-# 3. Injection SQL (retourne TOUS les tickets, y compris ceux de Mahdi)
-curl -s -G "http://localhost:8080/api/search" --data-urlencode "q=' OR 1=1 --" -H "Authorization: Bearer $TOKEN"
-```
-- **Correction :** En basculant en mode sécurisé, la requête utilise un paramètre préparé `$3` avec `ILIKE` et neutralise l'injection.
-
----
-
-### Faille 2 — XSS Stocké (A03 Injection)
-- **Emplacement :** Fil de commentaires dans `frontend/index.html` et `backend/server.js`
-- **Scénario :**
-  1. Se connecter en `roua`, ouvrir le ticket #1 et ajouter le commentaire :
-     ```html
-     <img src=x onerror="alert('VULN-002: Stored XSS exécuté !')">
-     ```
-  2. Se connecter en `agent1` et consulter le ticket #1.
-  3. En mode vulnérable, le script JavaScript s'exécute immédiatement dans le navigateur de l'agent.
-- **Correction :** En mode sécurisé, le corps du commentaire est rendu via `textContent` (texte brut sécurisé), les balises sont échappées côté backend et l'en-tête CSP bloque les injections.
-
----
-
-### Faille 3 — IDOR (A01 Broken Access Control)
-- **Emplacement :** `GET /tickets/:id` dans `backend/server.js`
-- **Scénario :** Roua (`id: 1`) tente d'accéder directement au ticket confidentiel #3 appartenant à Mahdi (`id: 2`).
-- **Preuve en ligne de commande :**
-```bash
-# Roua consulte le ticket #3 appartenant à Mahdi
-curl -i -s "http://localhost:8080/api/tickets/3" -H "Authorization: Bearer $TOKEN"
-```
-- **Résultat vulnérable :** HTTP `200 OK` avec exposition des données confidentielles de Mahdi.
-- **Résultat sécurisé :** HTTP `403 Forbidden` (`"Accès interdit : vous n'avez pas l'autorisation de consulter ce ticket"`) et inscription d'une alerte dans `audit_log`.
-
----
-
-### Faille 4 — Secret JWT Fictif Exposé (A02 / A05)
-- **Emplacement :** Constante `VULNERABLE_JWT_SECRET = 'hd_fake_8f3a9c1e7b2d4f60a5c9e1b37d82f4aa'` dans `backend/server.js`.
-- **Démonstration :** Détectable automatiquement lors du scan CI/CD par **Gitleaks** (jalon S2).
-- **Correction :** Rotation du secret et chargement exclusif via la variable d'environnement `JWT_SECRET` ou un Secret Kubernetes hors dépôt.
-
----
-
-## 6. Tests Automatisés et Non-Régression
-
-Une suite de tests automatisée vérifie le bon fonctionnement de l'authentification, des permissions RBAC, et de la neutralisation des 4 failles :
+Prérequis : Node.js 20+, Docker.
 
 ```bash
-# Exécution des tests unitaires backend
+# 1. Base PostgreSQL (schéma + données fictives chargés automatiquement)
+bash scripts/start-db.sh
+#    PowerShell : docker run -d --name helpdesk-db -e POSTGRES_DB=helpdesk -e POSTGRES_USER=helpdesk -e POSTGRES_PASSWORD=change_me_fictif_123 -p 5432:5432 -v "${PWD}/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro" postgres:16-alpine
+
+# 2. Backend (sert aussi l'interface)
 cd backend
-npm test
+npm install
+npm start
+
+# 3. Ouvrir http://localhost:3000     (santé : http://localhost:3000/api/health)
 ```
 
-Résultats attendus :
-```
---- Démarrage de la suite de tests HelpDesk ---
+Pour repartir d'une base propre : relancer `scripts/start-db.sh`.
 
-[1] Tests Authentification & Chiffrement (Bcrypt / JWT) :
-  ✔ Le mot de passe de test correspond au hash bcrypt
-  ✔ Génération et vérification d'un jeton JWT pour les 3 rôles (user, agent, admin)
+## Comptes de test (données fictives, mot de passe `Passw0rd!`)
 
-[2] Tests Contrôle d'Accès par Rôles (RBAC) :
-  ✔ Validation des permissions pour les 3 rôles
+| Rôle | Identifiant | Usage |
+|---|---|---|
+| user | `roua`, `mahdi`, `charlie` | déclarer et suivre ses tickets, commenter |
+| agent | `agent1` | voir tous les tickets, changer le statut, commenter |
+| admin | `admin1` | gérer les comptes et rôles, journal d'audit |
 
-[3] Tests Faille 3 (IDOR - Insecure Direct Object Reference) :
-  ✔ En mode sécurisé, un utilisateur régulier ne peut pas accéder au ticket d'un tiers
+## Les 4 failles volontaires
 
-[4] Tests Faille 2 (Stored XSS) :
-  ✔ En mode sécurisé, les balises HTML script et img dangereuses sont échappées
+| N° | Faille | Emplacement | OWASP | Preuve |
+|---|---|---|---|---|
+| VULN-001 | Injection SQL | `GET /search?q=` (`backend/server.js`) | A03 | `' OR 1=1 --` renvoie tous les tickets |
+| VULN-002 | XSS stocké | commentaires (`frontend/index.html`) | A03 | un commentaire HTML s'exécute chez l'agent |
+| VULN-003 | IDOR | `GET /tickets/:id` | A01 | roua lit le ticket #3 de mahdi |
+| VULN-004 | Secret JWT en dur | `VULNERABLE_JWT_SECRET` (`backend/server.js`) | A02 / A05 | visible dans le dépôt |
+| Bonus | Dépendances obsolètes | `backend/package.json` | A06 | express 4.17.1, jsonwebtoken 8.5.1 |
 
-[5] Tests Faille 1 (Injection SQL sur la recherche) :
-  ✔ Validation de la séparation entre concaténation brute et paramétrage
+Rejouer les preuves (à capturer pour le rapport) : `bash scripts/proofs.sh`.
+Détails : `docs/failles.md`.
 
-========================================
-Résultats : 7 réussis, 0 échoués
-========================================
-```
-
----
-
-## 7. Structure des Livrables
+## Structure
 
 ```
-helpdesk/
-├── backend/
-│   ├── Dockerfile             # Multi-stage build, USER 10001
-│   ├── package.json           # Dépendances applicatives (Express, pg, bcryptjs, jwt)
-│   ├── server.js              # API Express complète (RBAC, Audit, Notifications, 4 Failles)
-│   ├── test.js                # Suite de tests unitaires et non-régression
-│   └── .dockerignore          # Exclusion des fichiers sensibles
-├── db/
-│   └── init.sql               # Schéma relationnel (3 rôles, audit, notifs, history, seed)
-├── frontend/
-│   ├── Dockerfile             # Nginx unprivileged Alpine
-│   ├── nginx.conf             # Reverse proxy API et règles SPA
-│   └── index.html             # Interface moderne avec Landing page, 3 Dashboards, Lab
-├── docs/
-│   ├── architecture-initiale.md  # Description détaillée de l'architecture S1
-│   ├── failles.md             # Dossier technique complet des 4 vulnérabilités
-│   └── trame-rapport.md       # Trame du rapport académique (6 à 10 pages)
-├── docker-compose.yml         # Orchestration des services db, backend, frontend
-├── .env.example               # Modèle des variables d'environnement
-├── .gitignore                 # Exclusion des secrets et modules
-└── README.md                  # Documentation principale
+backend/    API Express (server.js) + package.json
+frontend/   index.html (interface)
+db/         init.sql (schéma + données fictives)
+docs/       architecture-initiale.md, failles.md, trame-rapport.md
+k8s/        vide pour l'instant (phase 6)
+scripts/    start-db.sh, proofs.sh
+.env.example
 ```
 
----
+## Retrouver le reste du projet
 
-## 8. Préparation pour le Jalon S2 (CI/CD)
+Tout le travail déjà fait est conservé dans l'historique Git :
+- `master` : version avec pipeline GitHub Actions (phase 3) ;
+- `secure` : version avec les failles corrigées (phase 5) ;
+- commit `fa0e088` : jalon S1 complet avec Dockerfiles et Docker Compose (phase 2).
 
-Le travail réalisé en S1 pose les bases pour les étapes suivantes :
-- **S2** : Configuration du pipeline `.gitlab-ci.yml` avec contrôles bloquants (Gitleaks, Semgrep, Trivy).
-- **S3** : Déploiement Kubernetes local (`kind`), NetworkPolicies et durcissement `securityContext`.
-- **S4** : Scans dynamiques DAST OWASP ZAP, observabilité Loki/Grafana et rédaction du rapport final.
+Pour récupérer par exemple la conteneurisation en phase 2 :
+`git checkout fa0e088 -- docker-compose.yml backend/Dockerfile backend/.dockerignore frontend/Dockerfile frontend/nginx.conf .dockerignore`
