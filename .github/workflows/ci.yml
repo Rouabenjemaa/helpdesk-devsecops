@@ -1,0 +1,164 @@
+name: HelpDesk DevSecOps Pipeline
+
+# Phase 3 : pipeline BLOQUANT. Chaque contrôle de sécurité fait échouer le pipeline
+# (aucun "|| true", aucun "continue-on-error"). Tant que les 4 failles volontaires
+# existent, le pipeline est ROUGE : c'est le comportement attendu (preuve de la phase 3).
+on:
+  push:
+    branches: ["main", "dev", "feat/**"]
+  pull_request:
+    branches: ["main", "dev"]
+
+permissions:
+  contents: read
+
+jobs:
+  # JOB 1 : build + tests (Roua)
+  tests:
+    name: "Build et tests backend"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+      - name: Installer les dépendances
+        working-directory: backend
+        run: npm ci
+      - name: Tests (vérification de syntaxe du serveur)
+        working-directory: backend
+        run: npm test
+
+  # JOB 2 : détection de secrets (Roua). BLOQUE sur VULN-004 (secret JWT en dur).
+  gitleaks:
+    name: "Gitleaks - secrets"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # analyse tout l'historique Git
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
+          GITLEAKS_ENABLE_COMMENTS: "false"
+
+  # JOB 3 : analyse statique SAST (Roua). BLOQUE si une règle de sévérité ERROR est déclenchée.
+  semgrep:
+    name: "Semgrep - SAST"
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v4
+      - name: Semgrep (règles du registre + règles du projet)
+        run: |
+          semgrep scan \
+            --config p/owasp-top-ten \
+            --config p/nodejs \
+            --config .semgrep.yml \
+            --severity ERROR \
+            --error \
+            --metrics=off \
+            backend/
+
+  # JOB 4 : dépendances SCA (Mahdi). BLOQUE sur CRITICAL, et sur HIGH si un correctif existe.
+  trivy-deps:
+    name: "Trivy - dépendances"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: "fs"
+          scan-ref: "backend/"
+          scanners: "vuln"
+          severity: "HIGH,CRITICAL"
+          ignore-unfixed: true
+          exit-code: "1"
+          format: "table"
+
+  # JOB 5 : build de l'image + scan de l'image + contrôle "non root" (Mahdi)
+  docker-build-scan:
+    name: "Docker build et Trivy image"
+    runs-on: ubuntu-latest
+    needs: [tests]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Construire l'image backend
+        uses: docker/build-push-action@v5
+        with:
+          context: backend/
+          push: false
+          load: true
+          tags: helpdesk-backend:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Trivy - scan de l'image (bloque sur CRITICAL)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: "helpdesk-backend:${{ github.sha }}"
+          severity: "CRITICAL"
+          ignore-unfixed: true
+          exit-code: "1"
+          format: "table"
+      - name: L'image ne doit pas tourner en root
+        run: |
+          USER_CFG=$(docker inspect helpdesk-backend:${{ github.sha }} --format '{{ .Config.User }}')
+          echo "Utilisateur de l'image : '$USER_CFG'"
+          if [ -z "$USER_CFG" ] || [ "$USER_CFG" = "root" ] || [ "$USER_CFG" = "0" ]; then
+            echo "ERREUR : l'image tourne en root"
+            exit 1
+          fi
+
+  # JOB 6 : publication dans GHCR, UNIQUEMENT si tous les contrôles ci-dessus ont réussi
+  push-image:
+    name: "Publier l'image (GHCR)"
+    runs-on: ubuntu-latest
+    needs: [tests, gitleaks, semgrep, trivy-deps, docker-build-scan]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Nom d'image en minuscules (exigé par GHCR)
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}/helpdesk-backend" >> "$GITHUB_ENV"
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v5
+        with:
+          context: backend/
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:latest
+
+  # JOB 7 : résumé lisible dans l'onglet Actions
+  summary:
+    name: "Résumé du pipeline"
+    runs-on: ubuntu-latest
+    needs: [tests, gitleaks, semgrep, trivy-deps, docker-build-scan]
+    if: always()
+    steps:
+      - name: Résumé
+        run: |
+          {
+            echo "## Résumé du pipeline DevSecOps"
+            echo ""
+            echo "| Contrôle | Résultat |"
+            echo "|---|---|"
+            echo "| Build et tests | ${{ needs.tests.result }} |"
+            echo "| Gitleaks (secrets) | ${{ needs.gitleaks.result }} |"
+            echo "| Semgrep (SAST) | ${{ needs.semgrep.result }} |"
+            echo "| Trivy dépendances | ${{ needs.trivy-deps.result }} |"
+            echo "| Docker build + Trivy image | ${{ needs.docker-build-scan.result }} |"
+            echo ""
+            echo "Branche : \`${{ github.ref_name }}\` - Commit : \`${{ github.sha }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
