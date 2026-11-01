@@ -67,4 +67,6 @@ Gitleaks analyse tout l'historique. Même après correction du code, l'ancien se
 
 **Option B : liste d'exceptions** (`.gitleaksignore`). On y inscrit les empreintes des 3 résultats connus. Simple et sans risque, mais le secret reste lisible dans l'historique ; acceptable ici seulement parce qu'il est fictif et révoqué. À documenter dans le rapport comme risque accepté.
 
+**État du dépôt :** l'option B est appliquée (fichier `.gitleaksignore` à la racine, avec les 3 empreintes relevées dans le journal Gitleaks du run #5). L'option A reste possible en fin de projet.
+
 Dans tous les cas, **ne collez jamais l'ancienne valeur dans un fichier du dépôt** : Gitleaks la détecterait aussitôt.

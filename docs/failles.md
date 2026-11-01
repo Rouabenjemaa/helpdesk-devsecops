@@ -121,7 +121,7 @@ curl -s "http://localhost:8080/api/tickets/3" -H "Authorization: Bearer $ROUA_TO
 ### 4.2 Cause Technique
 Le secret utilisé pour signer et valider les jetons JWT était codé sous forme de constante textuelle dans le code applicatif :
 ```javascript
-const VULNERABLE_JWT_SECRET = 'hd_fake_8f3a9c1e7b2d4f60a5c9e1b37d82f4aa';
+const VULNERABLE_JWT_SECRET = '<valeur fictive retirée de la documentation>';
 ```
 
 ### 4.3 Scénario de Détection & Preuve Avant Correction
