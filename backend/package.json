@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "echo \"Pas de tests en phase 1 (ils arrivent en phase 3)\""
+    "test": "node --check server.js"
   },
   "dependencies": {
     "bcryptjs": "2.4.3",
