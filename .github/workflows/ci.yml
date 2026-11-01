@@ -32,18 +32,23 @@ jobs:
         run: npm test
 
   # JOB 2 : détection de secrets (Roua). BLOQUE sur VULN-004 (secret JWT en dur).
+  # On lance le binaire Gitleaks directement : l'action gitleaks-action ne scanne que les
+  # commits du push en cours (le secret, déjà présent dans l'historique, passerait inaperçu).
   gitleaks:
     name: "Gitleaks - secrets"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # analyse tout l'historique Git
-      - uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_CONFIG: .gitleaks.toml
-          GITLEAKS_ENABLE_COMMENTS: "false"
+          fetch-depth: 0   # historique complet nécessaire
+      - name: Installer Gitleaks (version fixée)
+        run: |
+          curl -sSfL -o gitleaks.tar.gz "https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz"
+          tar -xzf gitleaks.tar.gz gitleaks
+          sudo mv gitleaks /usr/local/bin/
+          gitleaks version
+      - name: Analyse de tout l'historique Git
+        run: gitleaks detect --source . --config .gitleaks.toml --redact --verbose --exit-code 1
 
   # JOB 3 : analyse statique SAST (Roua). BLOQUE si une règle de sévérité ERROR est déclenchée.
   semgrep:

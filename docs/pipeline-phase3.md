@@ -15,7 +15,7 @@ Fichier : `.github/workflows/ci.yml`. Déclenché à chaque `push` sur `main`, `
 Aucun contrôle n'utilise `|| true` ni `continue-on-error`. Un code qui contient un secret, une injection SQL ou une dépendance vulnérable ne peut donc pas être publié : le job `push-image` dépend de tous les autres.
 
 ## Point d'attention : l'historique Git
-Gitleaks analyse tout l'historique (`fetch-depth: 0`). Même après correction du code, le secret reste dans d'anciens commits : le job ne passera au vert qu'après la procédure de rotation de la phase 4 (réécriture de l'historique ou nouveau dépôt propre).
+Gitleaks est lancé en ligne de commande (`gitleaks detect`) et analyse tout l'historique. L'action `gitleaks-action` n'a pas été retenue : elle ne scanne que les commits du push en cours et laissait passer un secret déjà présent dans l'historique (constaté au run #2). Même après correction du code, le secret reste dans d'anciens commits : le job ne passera au vert qu'après la procédure de rotation de la phase 4 (réécriture de l'historique ou nouveau dépôt propre).
 
 ## Ne pas exiger les contrôles avant la phase 5
 Dans les règles de protection de `main`, n'ajoutez pas ces jobs en « required status checks » tant que le pipeline est rouge : plus aucune Pull Request (même celle qui corrige les failles) ne pourrait être fusionnée.
