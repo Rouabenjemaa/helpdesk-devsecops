@@ -24,4 +24,4 @@ curl -s -X POST "$API/tickets/1/comments" -H "Authorization: Bearer $T_ROUA" -H 
 echo "Ouvrez http://localhost:3000, connectez-vous en agent1, ouvrez le ticket #1 : alert(1) s'exécute."
 
 echo; echo "=== VULN-004 : secret JWT codé en dur ==="
-grep -n "VULNERABLE_JWT_SECRET =" "$(dirname "$0")/../backend/server.js"
+grep -n "hd_fake_" "$(dirname "$0")/../backend/server.js" || echo "(corrigée en phase 4 : plus aucun secret dans le code)"

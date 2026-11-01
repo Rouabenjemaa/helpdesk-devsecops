@@ -127,5 +127,5 @@ const VULNERABLE_JWT_SECRET = 'hd_fake_8f3a9c1e7b2d4f60a5c9e1b37d82f4aa';
 ### 4.3 Scénario de Détection & Preuve Avant Correction
 L'exécution de l'outil Gitleaks dans le pipeline CI/CD (prévu au jalon S2) identifie immédiatement la présence du faux secret et bloque le pipeline avec un code de sortie non nul.
 
-### 4.4 Correctif
-À réaliser plus tard (phase 5 ; rotation du secret en phase 4). Non implémenté en phase 1 : l'application reste volontairement vulnérable.
+### 4.4 Correctif (phase 4)
+Le secret est lu depuis `process.env.JWT_SECRET` (32 caractères minimum, aucune valeur par défaut). Il est fourni par le fichier `.env` en local, par les variables protégées GitHub dans la CI et par un Secret Kubernetes dans le cluster. L'ancien secret est révoqué (rotation), et les jetons signés avec lui sont refusés. Procédure complète : `docs/secrets-phase4.md`.

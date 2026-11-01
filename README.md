@@ -48,6 +48,19 @@ docker exec helpdesk-frontend whoami     # nginx (image nginx-unprivileged)
 Arrêter : `docker compose down` (ajoutez `-v` pour aussi effacer les données de la base).
 Les preuves d'attaque (`scripts/proofs.sh`) s'utilisent avec `API=http://localhost:8080/api bash scripts/proofs.sh`.
 
+## Phase 4 : secret JWT (obligatoire pour démarrer)
+
+Le secret n'est plus dans le code. Générez-le et ajoutez-le à votre fichier `.env` :
+
+```powershell
+$s = node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+Add-Content -Path .env -Value "`nJWT_SECRET=$s"
+docker compose up --build -d
+```
+
+Pour lancer le backend à la main : `$env:JWT_SECRET = "<valeur>"` avant `npm start`.
+Détails, GitHub Secrets, Secret Kubernetes et rotation : `docs/secrets-phase4.md`.
+
 ## Comptes de test (données fictives, mot de passe `Passw0rd!`)
 
 | Rôle | Identifiant | Usage |
