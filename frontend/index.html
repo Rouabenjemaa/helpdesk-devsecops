@@ -633,7 +633,6 @@
     }
 
     /* Détail d'un ticket */
-    
     .ticket-meta-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -1532,9 +1531,9 @@
         tr.innerHTML = `
           <td><strong>#${t.id}</strong></td>
           <td><strong>${escapeHtml(t.title)}</strong></td>
-          <td><span class="badge badge-category">${t.category || 'Autre'}</span></td>
-          <td><span class="badge ${priorityClasses[t.priority] || 'badge-moyenne'}">${t.priority || 'Moyenne'}</span></td>
-          <td><span class="badge badge-${t.status}">${statusLabels[t.status] || t.status}</span></td>
+          <td><span class="badge badge-category">${escapeHtml(t.category || 'Autre')}</span></td>
+          <td><span class="badge ${priorityClasses[t.priority] || 'badge-moyenne'}">${escapeHtml(t.priority || 'Moyenne')}</span></td>
+          <td><span class="badge badge-${escapeHtml(t.status)}">${escapeHtml(statusLabels[t.status] || t.status)}</span></td>
           <td>${escapeHtml(t.owner_username || t.owner_name || 'Utilisateur')}</td>
           <td style="color:var(--text-muted); font-size:0.8rem;">${new Date(t.created_at).toLocaleDateString()}</td>
           <td>
@@ -1610,9 +1609,9 @@
       $('dtDate').textContent = new Date(t.created_at).toLocaleString();
 
       const statusLabels = { open: 'Ouvert', in_progress: 'En cours', closed: 'Fermé' };
-      $('dtStatus').innerHTML = `<span class="badge badge-${t.status}">${statusLabels[t.status] || t.status}</span>`;
-      $('dtPriority').innerHTML = `<span class="badge badge-${t.priority.toLowerCase()}">${t.priority}</span>`;
-      $('dtCategory').innerHTML = `<span class="badge badge-category">${t.category}</span>`;
+      $('dtStatus').innerHTML = `<span class="badge badge-${escapeHtml(t.status)}">${escapeHtml(statusLabels[t.status] || t.status)}</span>`;
+      $('dtPriority').innerHTML = `<span class="badge badge-${escapeHtml(String(t.priority).toLowerCase())}">${escapeHtml(t.priority)}</span>`;
+      $('dtCategory').innerHTML = `<span class="badge badge-category">${escapeHtml(t.category)}</span>`;
 
       // Affichage du sélecteur de statut pour l'agent
       if (currentUser.role === 'agent') {
@@ -1631,16 +1630,19 @@
         const li = document.createElement('li');
         li.className = 'comment-card';
 
-        // FAILLE 2 (VULN-002, XSS stocké) : le corps du commentaire est injecté en innerHTML,
-        // sans aucun encodage (volontaire en phase 1).
-        const headerHtml = `
+        // VULN-002 (XSS stocké) CORRIGÉE (phase 5) : le corps du commentaire est inséré avec
+        // textContent, donc affiché comme du TEXTE et jamais interprété comme du HTML.
+        const role = escapeHtml(c.author_role || 'user');
+        li.innerHTML = `
           <div class="comment-header">
-            <strong>${escapeHtml(c.author_name || c.author)} <span class="role-badge role-${c.author_role || 'user'}">${c.author_role || 'user'}</span></strong>
+            <strong>${escapeHtml(c.author_name || c.author)} <span class="role-badge role-${role}">${role}</span></strong>
             <span style="color:var(--text-light);">${new Date(c.created_at).toLocaleString()}</span>
           </div>
         `;
-
-        li.innerHTML = headerHtml + `<div class="comment-body">${c.body}</div>`;
+        const bodyEl = document.createElement('div');
+        bodyEl.className = 'comment-body';
+        bodyEl.textContent = c.body;
+        li.appendChild(bodyEl);
 
         commentsList.appendChild(li);
       });
@@ -1790,7 +1792,7 @@
           <td><strong>${escapeHtml(u.username)}</strong></td>
           <td>${escapeHtml(u.full_name)}</td>
           <td>${escapeHtml(u.email || '-')}</td>
-          <td><span class="role-badge role-${u.role}">${u.role.toUpperCase()}</span></td>
+          <td><span class="role-badge role-${escapeHtml(u.role)}">${escapeHtml(String(u.role).toUpperCase())}</span></td>
           <td>
             <span class="badge ${u.is_active ? 'badge-closed' : 'badge-open'}">
               ${u.is_active ? 'Actif' : 'Désactivé'}

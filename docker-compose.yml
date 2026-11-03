@@ -32,6 +32,8 @@ services:
       DB_NAME: ${POSTGRES_DB:-helpdesk}
       DB_USER: ${POSTGRES_USER:-helpdesk}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-change_me_fictif_123}
+      # nginx est devant l'API : on lit l'adresse client dans X-Forwarded-For (limitation de débit)
+      TRUST_PROXY: "1"
       # Secret JWT : lu dans le fichier .env (non versionné). Pas de valeur par défaut :
       # Compose refuse de démarrer si la variable est absente.
       JWT_SECRET: "${JWT_SECRET:?JWT_SECRET manquant, voir docs/secrets-phase4.md}"

@@ -1,6 +1,6 @@
 /**
  * =============================================================================
- * HelpDesk DevSecOps - Serveur Backend Express (Phases 0 et 1 : application VOLONTAIREMENT VULNERABLE)
+ * HelpDesk DevSecOps - Serveur Backend Express (Phase 5 : failles corrigées)
  * TEK-UP University - Module DevSecOps - ING-5-SSIR
  * Binôme : Ben Jemaa Roua (Backend & Sécurité) & Dkhil Mohamed Mahdi (Frontend & DevOps)
  * =============================================================================
@@ -21,6 +21,63 @@ app.use((req, res, next) => {
   if (req.url.startsWith('/api/')) req.url = req.url.slice(4);
   next();
 });
+
+// =============================================================================
+// PHASE 5 : EN-TÊTES DE SÉCURITÉ ET LIMITATION DE DÉBIT
+// =============================================================================
+app.disable('x-powered-by');
+// Derrière nginx (Docker Compose), l'adresse du client est dans X-Forwarded-For.
+// À activer uniquement si un proxy de confiance est réellement devant l'API (TRUST_PROXY=1).
+if (process.env.TRUST_PROXY) app.set('trust proxy', Number(process.env.TRUST_PROXY) || 1);
+
+// Défense en profondeur contre le XSS et le clickjacking. LIMITE CONNUE : le frontend utilise
+// encore un script et des gestionnaires onclick en ligne, donc 'unsafe-inline' reste nécessaire
+// pour script-src. La protection principale contre le XSS est l'encodage à l'affichage (frontend).
+const CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data:",
+  "connect-src 'self'",
+  "object-src 'none'",
+  "base-uri 'none'",
+  "frame-ancestors 'none'",
+  "form-action 'self'",
+].join('; ');
+app.use((req, res, next) => {
+  res.setHeader('Content-Security-Policy', CONTENT_SECURITY_POLICY);
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  next();
+});
+
+// Limiteur simple en mémoire (par adresse IP). Suffisant pour une instance unique.
+function rateLimit({ windowMs, max }) {
+  const hits = new Map();
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, entry] of hits) if (now - entry.start > windowMs) hits.delete(key);
+  }, windowMs).unref();
+  return (req, res, next) => {
+    const now = Date.now();
+    const key = req.ip || req.socket.remoteAddress || 'inconnu';
+    const entry = hits.get(key);
+    if (!entry || now - entry.start > windowMs) {
+      hits.set(key, { start: now, count: 1 });
+      return next();
+    }
+    entry.count += 1;
+    if (entry.count > max) {
+      res.setHeader('Retry-After', String(Math.ceil((entry.start + windowMs - now) / 1000)));
+      return res.status(429).json({ error: 'Trop de requêtes, veuillez réessayer plus tard' });
+    }
+    next();
+  };
+}
+const loginLimiter = rateLimit({ windowMs: 60 * 1000, max: 10 });   // 10 tentatives par minute
+const searchLimiter = rateLimit({ windowMs: 60 * 1000, max: 60 });  // 60 recherches par minute
+
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
 });
@@ -86,7 +143,7 @@ function auth(req, res, next) {
   }
   const token = authHeader.substring(7);
   try {
-    const decoded = jwt.verify(token, getJwtSecret());
+    const decoded = jwt.verify(token, getJwtSecret(), { algorithms: ['HS256'] });
     req.user = decoded;
     next();
   } catch (err) {
@@ -158,10 +215,10 @@ app.get('/health', async (req, res) => {
       version: '1.0.0',
     });
   } catch (err) {
+    console.error('Health check en échec:', err.message);
     res.status(503).json({
       status: 'unhealthy',
       database: 'disconnected',
-      error: err.message,
     });
   }
 });
@@ -171,7 +228,7 @@ app.get('/health', async (req, res) => {
 // =============================================================================
 
 // POST /login : Connexion avec génération du jeton JWT
-app.post('/login', async (req, res) => {
+app.post('/login', loginLimiter, async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
     return res.status(400).json({ error: 'Identifiant et mot de passe requis' });
@@ -194,7 +251,7 @@ app.post('/login', async (req, res) => {
     const token = jwt.sign(
       { id: u.id, username: u.username, role: u.role, full_name: u.full_name },
       getJwtSecret(),
-      { expiresIn: '4h' }
+      { expiresIn: '4h', algorithm: 'HS256' }
     );
 
     await logAudit(u.id, u.username, 'AUTH_SUCCESS', `Connexion réussie avec le rôle ${u.role}`, req.ip);
@@ -222,7 +279,8 @@ app.get('/me', auth, async (req, res) => {
     if (!r.rows[0]) return res.status(404).json({ error: 'Utilisateur introuvable' });
     res.json(r.rows[0]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 });
 
@@ -274,12 +332,13 @@ app.get('/tickets', auth, async (req, res) => {
     const r = await pool.query(sql, params);
     res.json(r.rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 });
 
 // GET /tickets/:id : Détail d'un ticket avec commentaires et historique
-// FAILLE 3 (IDOR) : aucun contrôle du propriétaire. Roua peut lire les tickets de Mahdi.
+// VULN-003 (IDOR) CORRIGÉE (phase 5) : un utilisateur ne lit que ses propres tickets.
 app.get('/tickets/:id', auth, async (req, res) => {
   const ticketId = parseInt(req.params.id, 10);
   if (isNaN(ticketId)) return res.status(400).json({ error: 'Identifiant de ticket invalide' });
@@ -296,10 +355,17 @@ app.get('/tickets/:id', auth, async (req, res) => {
     const ticket = t.rows[0];
     if (!ticket) return res.status(404).json({ error: 'Ticket introuvable' });
 
-    // FAILLE 3 (VULN-003, IDOR) : AUCUN contrôle du propriétaire (volontaire).
-    // Un 'user' peut lire le ticket d'un autre en changeant l'identifiant dans l'URL.
-    if (ticket.owner_id !== req.user.id && req.user.role === 'user') {
-      console.warn(`[VULN-003 IDOR EXPLOITÉ] User #${req.user.id} (${req.user.username}) a accédé au ticket #${ticketId} de User #${ticket.owner_id}`);
+    // Contrôle d'accès au niveau de l'objet : un 'user' ne peut lire que ses propres tickets.
+    // Les agents et administrateurs voient tous les tickets.
+    if (req.user.role === 'user' && ticket.owner_id !== req.user.id) {
+      await logAudit(
+        req.user.id,
+        req.user.username,
+        'ACCESS_DENIED',
+        `Tentative d'accès au ticket #${ticketId} d'un autre utilisateur`,
+        req.ip
+      );
+      return res.status(403).json({ error: 'Accès refusé' });
     }
 
     // Récupération des commentaires
@@ -328,7 +394,8 @@ app.get('/tickets/:id', auth, async (req, res) => {
       history: h.rows,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 });
 
@@ -336,8 +403,11 @@ app.get('/tickets/:id', auth, async (req, res) => {
 app.post('/tickets', auth, async (req, res) => {
   const { title, description, category, priority } = req.body;
 
-  if (!title || !description) {
+  if (typeof title !== 'string' || typeof description !== 'string' || !title.trim() || !description.trim()) {
     return res.status(400).json({ error: 'Le titre et la description sont obligatoires' });
+  }
+  if (title.length > 200 || description.length > 5000) {
+    return res.status(400).json({ error: 'Titre (200 caractères max) ou description (5000 max) trop long' });
   }
 
   const validPriorities = ['Basse', 'Moyenne', 'Haute', 'Critique'];
@@ -380,7 +450,8 @@ app.post('/tickets', auth, async (req, res) => {
 
     res.status(201).json(newTicket);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 });
 
@@ -433,7 +504,8 @@ app.patch('/tickets/:id/status', auth, requireRole('agent'), async (req, res) =>
 
     res.json({ ok: true, ticket_id: ticketId, old_status: oldStatus, new_status: status });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 });
 
@@ -444,8 +516,11 @@ app.post('/tickets/:id/comments', auth, async (req, res) => {
   const ticketId = parseInt(req.params.id, 10);
   const { body } = req.body;
 
-  if (!body || !body.trim()) {
+  if (typeof body !== 'string' || !body.trim()) {
     return res.status(400).json({ error: 'Le commentaire ne peut pas être vide' });
+  }
+  if (body.length > 2000) {
+    return res.status(400).json({ error: 'Commentaire trop long (2000 caractères maximum)' });
   }
 
   try {
@@ -457,8 +532,9 @@ app.post('/tickets/:id/comments', auth, async (req, res) => {
       return res.status(403).json({ error: 'Vous ne pouvez commenter que vos propres tickets' });
     }
 
-    // FAILLE 2 (VULN-002, XSS stocké) : le commentaire est stocké tel quel, sans aucun encodage.
-    const commentBody = body;
+    // VULN-002 (XSS stocké) CORRIGÉE (phase 5) : le texte est stocké brut (c'est une donnée) ;
+    // l'encodage se fait à l'AFFICHAGE : le frontend utilise textContent / escapeHtml.
+    const commentBody = body.trim();
 
     await pool.query(
       'INSERT INTO comments (ticket_id, author_id, body) VALUES ($1, $2, $3)',
@@ -493,33 +569,41 @@ app.post('/tickets/:id/comments', auth, async (req, res) => {
 
     res.status(201).json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 });
 
 // GET /search?q= : Recherche de tickets
-// FAILLE 1 (VULN-001, Injection SQL) : `q` est concaténé directement dans la requête
-// SQL (payload de démonstration : ' OR 1=1 --). Volontaire en phase 1.
-app.get('/search', auth, async (req, res) => {
-  const q = req.query.q || '';
+// VULN-001 (injection SQL) CORRIGÉE (phase 5) : requête paramétrée. La saisie de l'utilisateur
+// n'est jamais concaténée dans le SQL ; elle est transmise comme paramètre ($1).
+app.get('/search', auth, searchLimiter, async (req, res) => {
+  const q = String(req.query.q || '').slice(0, 100);
   const isAgentOrAdmin = req.user.role === 'agent' || req.user.role === 'admin';
 
-  // Construction vulnérable obligatoire pour démonstration pédagogique
-  const scope = isAgentOrAdmin ? 'TRUE' : 't.owner_id=' + Number(req.user.id);
-  const sql = `
+  // Les jokers LIKE (% et _) saisis par l'utilisateur sont échappés : ils sont traités comme du texte.
+  const pattern = '%' + q.replace(/[\\%_]/g, '\\$&') + '%';
+  const params = [pattern];
+  let sql = `
     SELECT t.id, t.title, t.description, t.status, t.priority, t.category, t.created_at,
            u.username AS owner_username
     FROM tickets t
     JOIN users u ON u.id = t.owner_id
-    WHERE ${scope} AND t.title ILIKE '%${q}%'
-    ORDER BY t.id
+    WHERE t.title ILIKE $1
   `;
+  if (!isAgentOrAdmin) {
+    params.push(req.user.id);
+    sql += ' AND t.owner_id = $2';
+  }
+  sql += ' ORDER BY t.id';
+
   try {
-    const r = await pool.query(sql);
+    const r = await pool.query(sql, params);
     res.json(r.rows);
   } catch (e) {
-    // Retourne l'erreur SQL complète (information disclosure en mode vulnérable)
-    res.status(500).json({ error: e.message, query_executed: sql });
+    // Aucune information technique (message SQL, requête) n'est renvoyée au client.
+    console.error('Erreur /search:', e);
+    res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 });
 
@@ -549,7 +633,8 @@ app.get('/notifications', auth, async (req, res) => {
       unread_count: unread.rows[0].count,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 });
 
@@ -563,7 +648,8 @@ app.patch('/notifications/:id/read', auth, async (req, res) => {
     );
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 });
 
@@ -576,7 +662,8 @@ app.patch('/notifications/read-all', auth, async (req, res) => {
     );
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 });
 
@@ -608,7 +695,8 @@ app.get('/user/stats', auth, async (req, res) => {
       unread_notifications: unread.rows[0].count,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 });
 
@@ -635,7 +723,8 @@ app.get('/agent/stats', auth, requireRole('agent', 'admin'), async (req, res) =>
       unread_notifications: unread.rows[0].count,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 });
 
@@ -681,7 +770,8 @@ app.get('/admin/stats', auth, requireRole('admin'), async (req, res) => {
       by_priority: byPriority.rows,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 });
 
@@ -697,7 +787,8 @@ app.get('/admin/users', auth, requireRole('admin'), async (req, res) => {
     );
     res.json(r.rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 });
 
@@ -735,7 +826,8 @@ app.post('/admin/users', auth, requireRole('admin'), async (req, res) => {
     if (err.code === '23505') {
       return res.status(409).json({ error: 'Cet identifiant existe déjà' });
     }
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 });
 
@@ -782,7 +874,8 @@ app.patch('/admin/users/:id', auth, requireRole('admin'), async (req, res) => {
 
     res.json(r.rows[0]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 });
 
@@ -794,7 +887,8 @@ app.get('/admin/audit', auth, requireRole('admin'), async (req, res) => {
     );
     res.json(r.rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Erreur interne du serveur' });
   }
 });
 
@@ -883,7 +977,7 @@ async function seedDatabase() {
 const PORT = process.env.PORT || 3000;
 seedDatabase().then(() => {
   app.listen(PORT, () => {
-    console.log(`helpdesk-backend démarré sur :${PORT} (phases 0-1 : mode vulnérable)`);
+    console.log(`helpdesk-backend démarré sur :${PORT} (phase 5 : failles corrigées)`);
   });
 }).catch((err) => {
   console.error('Échec démarrage backend:', err);
