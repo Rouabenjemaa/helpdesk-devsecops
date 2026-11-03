@@ -1,0 +1,6 @@
+# Résultats Gitleaks connus dans l'HISTORIQUE Git (commit 21c8818, jalon S1).
+# Il s'agit du secret JWT FICTIF de la phase 1, désormais révoqué par rotation (phase 4).
+# Risque accepté et documenté dans le rapport. Format : commit:fichier:règle:ligne
+21c881897a45a96cb4ebc3070dcff86a578f6ab2:backend/server.js:helpdesk-jwt-secret-vuln004:28
+21c881897a45a96cb4ebc3070dcff86a578f6ab2:backend/server.js:generic-jwt-secret:28
+21c881897a45a96cb4ebc3070dcff86a578f6ab2:docs/failles.md:generic-jwt-secret:171
