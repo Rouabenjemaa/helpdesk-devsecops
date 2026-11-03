@@ -1,0 +1,36 @@
+# Règles Semgrep du projet HelpDesk (phase 3). Complètent les règles du registre.
+rules:
+  # VULN-001 : une entrée utilisateur (req.query) atteint pool.query() sans paramétrage.
+  - id: helpdesk-sql-injection-taint
+    mode: taint
+    languages: [javascript]
+    severity: ERROR
+    message: >
+      VULN-001 (injection SQL) : une valeur de req.query est utilisée dans la requête SQL.
+      Utiliser une requête paramétrée : pool.query('... WHERE x = $1', [valeur]).
+    pattern-sources:
+      - pattern: req.query.$PARAM
+      - pattern: req.query
+    pattern-sinks:
+      - patterns:
+          - pattern: $DB.query($SQL, ...)
+          - focus-metavariable: $SQL
+    pattern-sanitizers:
+      - pattern: Number(...)
+    metadata:
+      owasp: "A03:2021 - Injection"
+      cwe: "CWE-89"
+      vuln-id: VULN-001
+
+  # VULN-004 : le faux secret JWT du projet est codé en dur dans le code source.
+  - id: helpdesk-hardcoded-jwt-secret
+    languages: [javascript]
+    severity: ERROR
+    message: >
+      VULN-004 (secret en dur) : secret JWT présent dans le code. Le lire depuis
+      process.env.JWT_SECRET (variable d'environnement ou Secret Kubernetes).
+    pattern-regex: hd_fake_[a-f0-9]{32}
+    metadata:
+      owasp: "A02:2021 - Cryptographic Failures"
+      cwe: "CWE-798"
+      vuln-id: VULN-004

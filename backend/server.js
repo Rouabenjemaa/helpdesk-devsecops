@@ -26,13 +26,19 @@ app.get('/', (req, res) => {
 });
 
 // =============================================================================
-// FAILLE 4 (VULN-004) : secret JWT fictif CODÉ EN DUR dans le dépôt.
-// Volontaire (phase 1). Il sera détecté par Gitleaks (phase 3) puis remplacé
-// par une variable d'environnement / un Secret Kubernetes (phase 4).
+// VULN-004 CORRIGÉE (phase 4) : le secret JWT n'est plus écrit dans le code.
+// Il est fourni par l'environnement : fichier .env (Docker Compose), variable
+// protégée GitHub (CI) ou Secret Kubernetes (phase 6). Aucune valeur par défaut :
+// sans secret valide, le serveur refuse de démarrer (échec explicite plutôt que
+// démarrage avec un secret faible).
 // =============================================================================
-const VULNERABLE_JWT_SECRET = 'hd_fake_8f3a9c1e7b2d4f60a5c9e1b37d82f4aa';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET || JWT_SECRET.length < 32) {
+  console.error("JWT_SECRET manquant ou trop court (32 caractères minimum). Voir docs/secrets-phase4.md.");
+  process.exit(1);
+}
 function getJwtSecret() {
-  return VULNERABLE_JWT_SECRET;
+  return JWT_SECRET;
 }
 
 // Connexion PostgreSQL
