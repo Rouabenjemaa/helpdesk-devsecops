@@ -1,10 +1,10 @@
-# HelpDesk DevSecOps — Phases 0 à 2 (application volontairement vulnérable, conteneurisée)
+# HelpDesk DevSecOps — Phases 0 à 5
 
 Projet académique — Module DevSecOps, TEK-UP University (ING-5-SSIR).
 Binôme : **Ben Jemaa Roua** (backend, base de données, failles) · **Dkhil Mohamed Mahdi** (frontend, architecture, rapport).
 
 > Cette branche contient les phases 0 et 1 (application, base PostgreSQL, 4 failles volontaires, preuves) et la phase 2 (conteneurisation).
-> Aucune faille n'est corrigée ici. CI/CD, secrets, correctifs, Kubernetes, DAST et observabilité viennent dans les phases suivantes.
+> Les failles sont corrigées en phase 5. Kubernetes, DAST et observabilité viennent dans les phases suivantes.
 
 ## Démarrage
 
@@ -60,6 +60,11 @@ docker compose up --build -d
 
 Pour lancer le backend à la main : `$env:JWT_SECRET = "<valeur>"` avant `npm start`.
 Détails, GitHub Secrets, Secret Kubernetes et rotation : `docs/secrets-phase4.md`.
+
+## Phase 5 : failles corrigées
+
+Les 4 failles sont corrigées et couvertes par des tests de non-régression (`backend/test/regression.test.js`).
+Détails, limites connues et mise à jour des dépendances : `docs/correctifs-phase5.md`.
 
 ## Comptes de test (données fictives, mot de passe `Passw0rd!`)
 

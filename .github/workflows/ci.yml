@@ -13,10 +13,25 @@ permissions:
   contents: read
 
 jobs:
-  # JOB 1 : build + tests (Roua)
+  # JOB 1 : build + tests de non-régression (Roua)
+  # Les tests rejouent les attaques des 4 failles contre l'API réelle, avec une vraie base PostgreSQL.
   tests:
     name: "Build et tests backend"
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: helpdesk
+          POSTGRES_USER: helpdesk
+          POSTGRES_PASSWORD: change_me_fictif_123
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U helpdesk -d helpdesk"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -27,9 +42,33 @@ jobs:
       - name: Installer les dépendances
         working-directory: backend
         run: npm ci
-      - name: Tests (vérification de syntaxe du serveur)
+      - name: Charger le schéma et les données fictives
+        run: PGPASSWORD=change_me_fictif_123 psql -h localhost -U helpdesk -d helpdesk -f db/init.sql
+      - name: Démarrer l'API et lancer les tests
         working-directory: backend
-        run: npm test
+        env:
+          DB_HOST: localhost
+          DB_PORT: "5432"
+          DB_NAME: helpdesk
+          DB_USER: helpdesk
+          DB_PASSWORD: change_me_fictif_123
+        run: |
+          # Secret de test généré à la volée : il n'existe nulle part dans le dépôt.
+          export JWT_SECRET="$(openssl rand -hex 32)"
+          node server.js > ../server.log 2>&1 &
+          SERVER_PID=$!
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:3000/health > /dev/null && break
+            sleep 2
+          done
+          STATUS=0
+          TEST_BASE_URL=http://localhost:3000 npm test || STATUS=$?
+          if [ "$STATUS" -ne 0 ]; then
+            echo "--- Journal du serveur (50 dernières lignes) ---"
+            tail -n 50 ../server.log
+          fi
+          kill "$SERVER_PID" 2>/dev/null || true
+          exit "$STATUS"
 
   # JOB 2 : détection de secrets (Roua). BLOQUE sur VULN-004 (secret JWT en dur).
   # On lance le binaire Gitleaks directement : l'action gitleaks-action ne scanne que les

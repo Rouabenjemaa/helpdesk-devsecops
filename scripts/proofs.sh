@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Phase 1 : rejoue les preuves "AVANT correction" (à photographier pour le rapport).
+# Rejoue les attaques des phases 1 et 5. Avant correction : elles réussissent (preuves "avant").
+# Après les correctifs de la phase 5 : elles échouent (403 pour l'IDOR, aucun ticket étranger pour la SQLi).
 # Prérequis : base + backend lancés (npm start).  Usage : bash scripts/proofs.sh
 # Cible UNIQUEMENT votre application locale.
 API="${API:-http://localhost:3000/api}"
