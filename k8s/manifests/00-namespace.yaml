@@ -1,0 +1,11 @@
+# Espace de noms dédié. Pod Security Admission en mode "restricted" : Kubernetes REFUSE tout pod
+# qui ne respecte pas les règles de durcissement (non-root, pas d'élévation de privilèges,
+# capacités Linux retirées, profil seccomp).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: helpdesk
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted

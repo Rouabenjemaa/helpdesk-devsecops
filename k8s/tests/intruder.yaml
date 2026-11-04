@@ -1,0 +1,30 @@
+# Pod "intrus" de test : il n'est autorisé par AUCUNE règle réseau (hormis le DNS).
+# Il tente de joindre l'API. Résultat attendu : DNS=OK puis une expiration de délai (timed out).
+# Si DNS=KO, le test ne prouve rien (le nom n'a pas été résolu).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: intruder
+  namespace: helpdesk
+  labels: { app: intruder }
+spec:
+  restartPolicy: Never
+  automountServiceAccountToken: false
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    seccompProfile: { type: RuntimeDefault }
+  containers:
+    - name: probe
+      image: busybox:1.36
+      command:
+        - sh
+        - -c
+        - |
+          nslookup backend.helpdesk.svc.cluster.local >/dev/null 2>&1 && echo DNS=OK || echo DNS=KO
+          timeout 12 wget -T 4 -O- http://backend.helpdesk.svc.cluster.local:3000/health 2>&1 | head -c 300
+          echo
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities: { drop: ["ALL"] }
