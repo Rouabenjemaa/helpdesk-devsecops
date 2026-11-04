@@ -1,0 +1,75 @@
+# API Express. L'image vient du registre GHCR (publiée par le pipeline, après tous les contrôles).
+# On utilise le SHA du commit (et non "latest") : l'image déployée est toujours exactement identifiable.
+# Pour déployer une version plus récente : remplacer le SHA par celui du dernier run vert sur main.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: helpdesk
+  labels: { app: backend }
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: backend }
+  template:
+    metadata:
+      labels: { app: backend, tier: api }
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001           # utilisateur "app" créé dans le Dockerfile
+        runAsGroup: 10001
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: backend
+          image: ghcr.io/rouabenjemaa/helpdesk-devsecops/helpdesk-backend:79949224bd194dcae9092cf9abbccaf1b10195a9
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          env:
+            - { name: PORT, value: "3000" }
+            - { name: DB_HOST, value: db }
+            - { name: DB_PORT, value: "5432" }
+            - { name: DB_NAME, value: helpdesk }
+            - { name: DB_USER, value: helpdesk }
+            - { name: TRUST_PROXY, value: "1" }          # nginx (frontend) est devant l'API
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: helpdesk-db, key: POSTGRES_PASSWORD }
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef: { name: helpdesk-jwt, key: JWT_SECRET }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 256Mi }
+          # Prêt = la base répond (/health). Un pod "pas prêt" ne reçoit plus de trafic.
+          readinessProbe:
+            httpGet: { path: /health, port: 3000 }
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          # Vivant = le processus écoute. Volontairement indépendant de la base : une panne de base
+          # ne doit pas faire redémarrer l'API en boucle. Si l'API se bloque, Kubernetes la relance.
+          livenessProbe:
+            tcpSocket: { port: 3000 }
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: helpdesk
+spec:
+  selector: { app: backend }
+  ports:
+    - { port: 3000, targetPort: 3000 }

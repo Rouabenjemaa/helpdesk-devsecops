@@ -1,0 +1,89 @@
+# Base de données PostgreSQL.
+# Secrets : le mot de passe vient du Secret "helpdesk-db" (créé par scripts/deploy.ps1, jamais versionné).
+# Schéma et données fictives : ConfigMap "helpdesk-db-init" (créé depuis db/init.sql).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: db-data
+  namespace: helpdesk
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db
+  namespace: helpdesk
+  labels: { app: db }
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate            # une seule base, un seul volume : pas de mise à jour "en parallèle"
+  selector:
+    matchLabels: { app: db }
+  template:
+    metadata:
+      labels: { app: db, tier: data }
+    spec:
+      automountServiceAccountToken: false   # le pod n'a aucune raison de parler à l'API Kubernetes
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 70              # utilisateur "postgres" de l'image alpine
+        runAsGroup: 70
+        fsGroup: 70
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - { name: POSTGRES_DB, value: helpdesk }
+            - { name: POSTGRES_USER, value: helpdesk }
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: helpdesk-db, key: POSTGRES_PASSWORD }
+            - { name: PGDATA, value: /var/lib/postgresql/data/pgdata }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { cpu: 500m, memory: 512Mi }
+          readinessProbe:
+            exec: { command: ["pg_isready", "-U", "helpdesk", "-d", "helpdesk"] }
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            exec: { command: ["pg_isready", "-U", "helpdesk", "-d", "helpdesk"] }
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 6
+          volumeMounts:
+            - { name: data, mountPath: /var/lib/postgresql/data }
+            - { name: run, mountPath: /var/run/postgresql }      # socket PostgreSQL
+            - { name: tmp, mountPath: /tmp }
+            - { name: init, mountPath: /docker-entrypoint-initdb.d, readOnly: true }
+      volumes:
+        - name: data
+          persistentVolumeClaim: { claimName: db-data }
+        - name: run
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+        - name: init
+          configMap: { name: helpdesk-db-init }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+  namespace: helpdesk
+spec:
+  selector: { app: db }
+  ports:
+    - { port: 5432, targetPort: 5432 }
