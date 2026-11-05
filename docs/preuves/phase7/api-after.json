@@ -1,0 +1,839 @@
+{
+	"@programName": "ZAP",
+	"@version": "2.17.0",
+	"@generated": "Thu, 5 Nov 2026 00:35:23",
+	"created": "2026-11-05T00:35:23.762167164Z",
+	"insights":[
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://helpdesk-control-plane:30080",
+			"key": "insight.code.2xx",
+			"description": "Percentage of responses with status code 2xx",
+			"statistic": "57"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://helpdesk-control-plane:30080",
+			"key": "insight.code.3xx",
+			"description": "Percentage of responses with status code 3xx",
+			"statistic": "1"
+		},
+		{
+			"level": "Info",
+			"reason": "Exceeded Low",
+			"site": "http://helpdesk-control-plane:30080",
+			"key": "insight.code.4xx",
+			"description": "Percentage of responses with status code 4xx",
+			"statistic": "40"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://helpdesk-control-plane:30080",
+			"key": "insight.code.5xx",
+			"description": "Percentage of responses with status code 5xx",
+			"statistic": "1"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://helpdesk-control-plane:30080",
+			"key": "insight.endpoint.ctype.application/json",
+			"description": "Percentage of endpoints with content type application/json",
+			"statistic": "43"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://helpdesk-control-plane:30080",
+			"key": "insight.endpoint.ctype.text/html",
+			"description": "Percentage of endpoints with content type text/html",
+			"statistic": "56"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://helpdesk-control-plane:30080",
+			"key": "insight.endpoint.method.GET",
+			"description": "Percentage of endpoints with method GET",
+			"statistic": "59"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://helpdesk-control-plane:30080",
+			"key": "insight.endpoint.method.PATCH",
+			"description": "Percentage of endpoints with method PATCH",
+			"statistic": "6"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://helpdesk-control-plane:30080",
+			"key": "insight.endpoint.method.POST",
+			"description": "Percentage of endpoints with method POST",
+			"statistic": "34"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://helpdesk-control-plane:30080",
+			"key": "insight.endpoint.total",
+			"description": "Count of total endpoints",
+			"statistic": "32"
+		},
+		{
+			"level": "Info",
+			"reason": "Exceeded Low",
+			"site": "http://helpdesk-control-plane:30080",
+			"key": "insight.response.slow",
+			"description": "Percentage of slow responses",
+			"statistic": "6"
+		}
+	],
+	"site":[ 
+		{
+			"@name": "http://helpdesk-control-plane:30080",
+			"@host": "helpdesk-control-plane",
+			"@port": "30080",
+			"@ssl": "false",
+			"alerts": [ 
+				{
+					"pluginid": "100000",
+					"alertRef": "100000-2",
+					"alert": "A Server Error response code was returned by the server",
+					"name": "A Server Error response code was returned by the server",
+					"riskcode": "1",
+					"confidence": "3",
+					"riskdesc": "Low (High)",
+					"desc": "<p>A response code of 500 was returned by the server.</p><p>This may indicate that the application is failing to handle unexpected input correctly.</p><p>Raised by the 'Alert on HTTP Response Code Error' script</p>",
+					"instances":[ 
+						{
+							"id": "586",
+							"uri": "http://helpdesk-control-plane:30080/api/search?q=%00",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/search (q)",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "500",
+							"otherinfo": ""
+						},
+						{
+							"id": "30",
+							"uri": "http://helpdesk-control-plane:30080/api/tickets/6996236269246292620",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/tickets\/6996236269246292620",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "500",
+							"otherinfo": ""
+						},
+						{
+							"id": "588",
+							"uri": "http://helpdesk-control-plane:30080/api/tickets",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/tickets ()({title,description,category,priority})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "500",
+							"otherinfo": ""
+						},
+						{
+							"id": "589",
+							"uri": "http://helpdesk-control-plane:30080/api/tickets/1/comments",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/tickets\/1\/comments ()({body})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "500",
+							"otherinfo": ""
+						}
+					],
+					"count": "4",
+					"systemic": false,
+					"solution": "",
+					"otherinfo": "",
+					"reference": "",
+					"cweid": "388",
+					"wascid": "20",
+					"sourceid": "1248"
+				},
+				{
+					"pluginid": "90004",
+					"alertRef": "90004-1",
+					"alert": "Cross-Origin-Resource-Policy Header Missing or Invalid",
+					"name": "Cross-Origin-Resource-Policy Header Missing or Invalid",
+					"riskcode": "1",
+					"confidence": "2",
+					"riskdesc": "Low (Medium)",
+					"desc": "<p>Cross-Origin-Resource-Policy header is an opt-in header designed to counter side-channels attacks like Spectre. Resource should be specifically set as shareable amongst different origins.</p>",
+					"instances":[ 
+						{
+							"id": "4",
+							"uri": "http://helpdesk-control-plane:30080/api/health",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/health",
+							"method": "GET",
+							"param": "Cross-Origin-Resource-Policy",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "10",
+							"uri": "http://helpdesk-control-plane:30080/api/me",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/me",
+							"method": "GET",
+							"param": "Cross-Origin-Resource-Policy",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "18",
+							"uri": "http://helpdesk-control-plane:30080/api/tickets",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/tickets",
+							"method": "GET",
+							"param": "Cross-Origin-Resource-Policy",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "22",
+							"uri": "http://helpdesk-control-plane:30080/api/tickets/1",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/tickets\/1",
+							"method": "GET",
+							"param": "Cross-Origin-Resource-Policy",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "15",
+							"uri": "http://helpdesk-control-plane:30080/api/tickets",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/tickets ()({title,description,category,priority})",
+							"method": "POST",
+							"param": "Cross-Origin-Resource-Policy",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": ""
+						}
+					],
+					"count": "5",
+					"systemic": true,
+					"solution": "<p>Ensure that the application/web server sets the Cross-Origin-Resource-Policy header appropriately, and that it sets the Cross-Origin-Resource-Policy header to 'same-origin' for all web pages.</p><p>'same-site' is considered as less secured and should be avoided.</p><p>If resources must be shared, set the header to 'cross-origin'.</p><p>If possible, ensure that the end user uses a standards-compliant and modern web browser that supports the Cross-Origin-Resource-Policy header (https://caniuse.com/mdn-http_headers_cross-origin-resource-policy).</p>",
+					"otherinfo": "",
+					"reference": "<p>https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Embedder-Policy</p>",
+					"cweid": "693",
+					"wascid": "14",
+					"sourceid": "1"
+				},
+				{
+					"pluginid": "2",
+					"alertRef": "2",
+					"alert": "Private IP Disclosure",
+					"name": "Private IP Disclosure",
+					"riskcode": "1",
+					"confidence": "2",
+					"riskdesc": "Low (Medium)",
+					"desc": "<p>A private IP (such as 10.x.x.x, 172.x.x.x, 192.168.x.x) or an Amazon EC2 private hostname (for example, ip-10-0-56-78) has been found in the HTTP response body. This information might be helpful for further attacks targeting internal systems.</p>",
+					"instances":[ 
+						{
+							"id": "12",
+							"uri": "http://helpdesk-control-plane:30080/api/search?q=VPN",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/search (q)",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "10.20.8.5",
+							"otherinfo": "10.20.8.5\n"
+						},
+						{
+							"id": "8",
+							"uri": "http://helpdesk-control-plane:30080/api/tickets",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/tickets",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "10.20.8.5",
+							"otherinfo": "10.20.8.5\n10.20.4.17\n"
+						},
+						{
+							"id": "11",
+							"uri": "http://helpdesk-control-plane:30080/api/tickets/1",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/tickets\/1",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "10.20.4.17",
+							"otherinfo": "10.20.4.17\n"
+						}
+					],
+					"count": "3",
+					"systemic": false,
+					"solution": "<p>Remove the private IP address from the HTTP response body. For comments, use JSP/ASP/PHP comment instead of HTML/JavaScript comment which can be seen by client browsers.</p>",
+					"otherinfo": "<p>10.20.8.5</p><p></p>",
+					"reference": "<p>https://datatracker.ietf.org/doc/html/rfc1918</p>",
+					"cweid": "497",
+					"wascid": "13",
+					"sourceid": "13"
+				},
+				{
+					"pluginid": "100001",
+					"alertRef": "100001",
+					"alert": "Unexpected Content-Type was returned",
+					"name": "Unexpected Content-Type was returned",
+					"riskcode": "1",
+					"confidence": "3",
+					"riskdesc": "Low (High)",
+					"desc": "<p>A Content-Type of text/html was returned by the server.</p><p>This is not one of the types expected to be returned by an API.</p><p>Raised by the 'Alert on Unexpected Content Types' script</p>",
+					"instances":[ 
+						{
+							"id": "35",
+							"uri": "http://helpdesk-control-plane:30080",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "text/html",
+							"otherinfo": ""
+						},
+						{
+							"id": "509",
+							"uri": "http://helpdesk-control-plane:30080/",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "text/html",
+							"otherinfo": ""
+						},
+						{
+							"id": "7",
+							"uri": "http://helpdesk-control-plane:30080/7467731055812681453",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/7467731055812681453",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "text/html",
+							"otherinfo": ""
+						},
+						{
+							"id": "6",
+							"uri": "http://helpdesk-control-plane:30080/8255076712899842908",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/8255076712899842908",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "text/html",
+							"otherinfo": ""
+						},
+						{
+							"id": "36",
+							"uri": "http://helpdesk-control-plane:30080/api",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "text/html",
+							"otherinfo": ""
+						},
+						{
+							"id": "513",
+							"uri": "http://helpdesk-control-plane:30080/api/",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "text/html",
+							"otherinfo": ""
+						},
+						{
+							"id": "19",
+							"uri": "http://helpdesk-control-plane:30080/api/774331075326446176",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/774331075326446176",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "text/html",
+							"otherinfo": ""
+						},
+						{
+							"id": "593",
+							"uri": "http://helpdesk-control-plane:30080/api/actuator/health",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/actuator\/health",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "text/html",
+							"otherinfo": ""
+						},
+						{
+							"id": "32",
+							"uri": "http://helpdesk-control-plane:30080/api/tickets/1/7432125645174244659",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/tickets\/1\/7432125645174244659",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "text/html",
+							"otherinfo": ""
+						},
+						{
+							"id": "41",
+							"uri": "http://helpdesk-control-plane:30080/api/user",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/user",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "text/html",
+							"otherinfo": ""
+						},
+						{
+							"id": "515",
+							"uri": "http://helpdesk-control-plane:30080/api/user/",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/user\/",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "text/html",
+							"otherinfo": ""
+						},
+						{
+							"id": "34",
+							"uri": "http://helpdesk-control-plane:30080/api/user/2383567284468125324",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/user\/2383567284468125324",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "text/html",
+							"otherinfo": ""
+						},
+						{
+							"id": "374",
+							"uri": "http://helpdesk-control-plane:30080/computeMetadata/v1/",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/computeMetadata\/v1\/ ()({username,password})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "text/html",
+							"otherinfo": ""
+						},
+						{
+							"id": "369",
+							"uri": "http://helpdesk-control-plane:30080/latest/meta-data/",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/latest\/meta-data\/ ()({username,password})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "text/html",
+							"otherinfo": ""
+						},
+						{
+							"id": "401",
+							"uri": "http://helpdesk-control-plane:30080/metadata/instance",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/metadata\/instance ()({username,password})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "text/html",
+							"otherinfo": ""
+						},
+						{
+							"id": "404",
+							"uri": "http://helpdesk-control-plane:30080/metadata/v1",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/metadata\/v1 ()({username,password})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "text/html",
+							"otherinfo": ""
+						},
+						{
+							"id": "381",
+							"uri": "http://helpdesk-control-plane:30080/opc/v1/instance/",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/opc\/v1\/instance\/ ()({username,password})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "text/html",
+							"otherinfo": ""
+						},
+						{
+							"id": "387",
+							"uri": "http://helpdesk-control-plane:30080/opc/v2/instance/",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/opc\/v2\/instance\/ ()({username,password})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "text/html",
+							"otherinfo": ""
+						},
+						{
+							"id": "407",
+							"uri": "http://helpdesk-control-plane:30080/openstack/latest/meta_data.json",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/openstack\/latest\/meta_data.json ()({username,password})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "text/html",
+							"otherinfo": ""
+						}
+					],
+					"count": "19",
+					"systemic": false,
+					"solution": "",
+					"otherinfo": "",
+					"reference": "",
+					"cweid": "-1",
+					"wascid": "-1",
+					"sourceid": "28"
+				},
+				{
+					"pluginid": "100000",
+					"alertRef": "100000-1",
+					"alert": "A Client Error response code was returned by the server",
+					"name": "A Client Error response code was returned by the server",
+					"riskcode": "0",
+					"confidence": "3",
+					"riskdesc": "Informational (High)",
+					"desc": "<p>A response code of 404 was returned by the server.</p><p>This may indicate that the application is failing to handle unexpected input correctly.</p><p>Raised by the 'Alert on HTTP Response Code Error' script</p>",
+					"instances":[ 
+						{
+							"id": "512",
+							"uri": "http://helpdesk-control-plane:30080/api/",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "16",
+							"uri": "http://helpdesk-control-plane:30080/api/774331075326446176",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/774331075326446176",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "592",
+							"uri": "http://helpdesk-control-plane:30080/api/actuator/health",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/actuator\/health",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "583",
+							"uri": "http://helpdesk-control-plane:30080/api/search?q=",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/search (q)",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "429",
+							"otherinfo": ""
+						},
+						{
+							"id": "31",
+							"uri": "http://helpdesk-control-plane:30080/api/tickets/1/7432125645174244659",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/tickets\/1\/7432125645174244659",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "40",
+							"uri": "http://helpdesk-control-plane:30080/api/user",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/user",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "514",
+							"uri": "http://helpdesk-control-plane:30080/api/user/",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/user\/",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "33",
+							"uri": "http://helpdesk-control-plane:30080/api/user/2383567284468125324",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/user\/2383567284468125324",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "5",
+							"uri": "http://helpdesk-control-plane:30080/api/tickets/1/status",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/tickets\/1\/status ()({status,comment})",
+							"method": "PATCH",
+							"param": "",
+							"attack": "",
+							"evidence": "403",
+							"otherinfo": ""
+						},
+						{
+							"id": "507",
+							"uri": "http://helpdesk-control-plane:30080/api/tickets/1/status/",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/tickets\/1\/status\/ ()({status,comment})",
+							"method": "PATCH",
+							"param": "",
+							"attack": "",
+							"evidence": "403",
+							"otherinfo": ""
+						},
+						{
+							"id": "0",
+							"uri": "http://helpdesk-control-plane:30080/api/login",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/login ()({username,password})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "401",
+							"otherinfo": ""
+						},
+						{
+							"id": "73",
+							"uri": "http://helpdesk-control-plane:30080/api/login",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/login ()({username,password})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "429",
+							"otherinfo": ""
+						},
+						{
+							"id": "506",
+							"uri": "http://helpdesk-control-plane:30080/api/login/",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/login\/ ()({username,password})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "429",
+							"otherinfo": ""
+						},
+						{
+							"id": "523",
+							"uri": "http://helpdesk-control-plane:30080/api/tickets",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/tickets ()({title,description,category,priority})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "400",
+							"otherinfo": ""
+						},
+						{
+							"id": "516",
+							"uri": "http://helpdesk-control-plane:30080/api/tickets/1/comments",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/tickets\/1\/comments ()({body})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "400",
+							"otherinfo": ""
+						},
+						{
+							"id": "373",
+							"uri": "http://helpdesk-control-plane:30080/computeMetadata/v1/",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/computeMetadata\/v1\/ ()({username,password})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "405",
+							"otherinfo": ""
+						},
+						{
+							"id": "368",
+							"uri": "http://helpdesk-control-plane:30080/latest/meta-data/",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/latest\/meta-data\/ ()({username,password})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "405",
+							"otherinfo": ""
+						},
+						{
+							"id": "400",
+							"uri": "http://helpdesk-control-plane:30080/metadata/instance",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/metadata\/instance ()({username,password})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "405",
+							"otherinfo": ""
+						},
+						{
+							"id": "403",
+							"uri": "http://helpdesk-control-plane:30080/metadata/v1",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/metadata\/v1 ()({username,password})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "405",
+							"otherinfo": ""
+						},
+						{
+							"id": "380",
+							"uri": "http://helpdesk-control-plane:30080/opc/v1/instance/",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/opc\/v1\/instance\/ ()({username,password})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "405",
+							"otherinfo": ""
+						},
+						{
+							"id": "386",
+							"uri": "http://helpdesk-control-plane:30080/opc/v2/instance/",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/opc\/v2\/instance\/ ()({username,password})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "405",
+							"otherinfo": ""
+						},
+						{
+							"id": "406",
+							"uri": "http://helpdesk-control-plane:30080/openstack/latest/meta_data.json",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/openstack\/latest\/meta_data.json ()({username,password})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "405",
+							"otherinfo": ""
+						}
+					],
+					"count": "22",
+					"systemic": false,
+					"solution": "",
+					"otherinfo": "",
+					"reference": "",
+					"cweid": "388",
+					"wascid": "20",
+					"sourceid": "1105"
+				},
+				{
+					"pluginid": "10111",
+					"alertRef": "10111",
+					"alert": "Authentication Request Identified",
+					"name": "Authentication Request Identified",
+					"riskcode": "0",
+					"confidence": "3",
+					"riskdesc": "Informational (High)",
+					"desc": "<p>The given request has been identified as an authentication request. The 'Other Info' field contains a set of key=value lines which identify any relevant fields. If the request is in a context which has an Authentication Method set to \"Auto-Detect\" then this rule will change the authentication to match the request identified.</p>",
+					"instances":[ 
+						{
+							"id": "1",
+							"uri": "http://helpdesk-control-plane:30080/api/login",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/login ()({username,password})",
+							"method": "POST",
+							"param": "username",
+							"attack": "",
+							"evidence": "password",
+							"otherinfo": "userParam=username\nuserValue=roua\npasswordParam=password"
+						}
+					],
+					"count": "1",
+					"systemic": false,
+					"solution": "<p>This is an informational alert rather than a vulnerability and so there is nothing to fix.</p>",
+					"otherinfo": "<p>userParam=username</p><p>userValue=roua</p><p>passwordParam=password</p>",
+					"reference": "<p>https://www.zaproxy.org/docs/desktop/addons/authentication-helper/auth-req-id/</p>",
+					"cweid": "-1",
+					"wascid": "-1",
+					"sourceid": "4"
+				},
+				{
+					"pluginid": "10049",
+					"alertRef": "10049-1",
+					"alert": "Non-Storable Content",
+					"name": "Non-Storable Content",
+					"riskcode": "0",
+					"confidence": "2",
+					"riskdesc": "Informational (Medium)",
+					"desc": "<p>The response contents are not storable by caching components such as proxy servers. If the response does not contain sensitive, personal or user-specific information, it may benefit from being stored and cached, to improve performance.</p>",
+					"instances":[ 
+						{
+							"id": "2",
+							"uri": "http://helpdesk-control-plane:30080/api/health",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/health",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "authorization:",
+							"otherinfo": ""
+						},
+						{
+							"id": "9",
+							"uri": "http://helpdesk-control-plane:30080/api/me",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/me",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "authorization:",
+							"otherinfo": ""
+						},
+						{
+							"id": "13",
+							"uri": "http://helpdesk-control-plane:30080/api/tickets/1/status",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/tickets\/1\/status ()({status,comment})",
+							"method": "PATCH",
+							"param": "",
+							"attack": "",
+							"evidence": "PATCH ",
+							"otherinfo": ""
+						},
+						{
+							"id": "3",
+							"uri": "http://helpdesk-control-plane:30080/api/login",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/login ()({username,password})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "authorization:",
+							"otherinfo": ""
+						},
+						{
+							"id": "14",
+							"uri": "http://helpdesk-control-plane:30080/api/tickets",
+							"nodeName": "http:\/\/helpdesk-control-plane:30080\/api\/tickets ()({title,description,category,priority})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "authorization:",
+							"otherinfo": ""
+						}
+					],
+					"count": "5",
+					"systemic": true,
+					"solution": "<p>The content may be marked as storable by ensuring that the following conditions are satisfied:</p><p>The request method must be understood by the cache and defined as being cacheable (\"GET\", \"HEAD\", and \"POST\" are currently defined as cacheable)</p><p>The response status code must be understood by the cache (one of the 1XX, 2XX, 3XX, 4XX, or 5XX response classes are generally understood)</p><p>The \"no-store\" cache directive must not appear in the request or response header fields</p><p>For caching by \"shared\" caches such as \"proxy\" caches, the \"private\" response directive must not appear in the response</p><p>For caching by \"shared\" caches such as \"proxy\" caches, the \"Authorization\" header field must not appear in the request, unless the response explicitly allows it (using one of the \"must-revalidate\", \"public\", or \"s-maxage\" Cache-Control response directives)</p><p>In addition to the conditions above, at least one of the following conditions must also be satisfied by the response:</p><p>It must contain an \"Expires\" header field</p><p>It must contain a \"max-age\" response directive</p><p>For \"shared\" caches such as \"proxy\" caches, it must contain a \"s-maxage\" response directive</p><p>It must contain a \"Cache Control Extension\" that allows it to be cached</p><p>It must have a status code that is defined as cacheable by default (200, 203, 204, 206, 300, 301, 404, 405, 410, 414, 501).</p>",
+					"otherinfo": "",
+					"reference": "<p>https://datatracker.ietf.org/doc/html/rfc7234</p><p>https://datatracker.ietf.org/doc/html/rfc7231</p><p>https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html</p>",
+					"cweid": "524",
+					"wascid": "13",
+					"sourceid": "1"
+				}
+			]
+		}
+	],
+	"sequences":[
+	]
+
+}
