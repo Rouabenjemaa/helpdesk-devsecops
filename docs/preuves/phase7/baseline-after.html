@@ -1,0 +1,4852 @@
+<!DOCTYPE html>
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>ZAP Scanning Report</title>
+<style type="text/css">
+body {
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	color: #000;
+	font-size: 13px;
+}
+
+h1 {
+	text-align: center;
+	font-weight: bold;
+	font-size: 32px
+}
+
+h3 {
+	font-size: 16px;
+}
+
+table {
+	border: none;
+	font-size: 13px;
+}
+
+td, th {
+	padding: 3px 4px;
+	word-break: break-word;
+}
+
+th {
+	font-weight: bold;
+	background-color: #666666;
+}
+
+td {
+	background-color: #e8e8e8;
+}
+
+.spacer {
+	margin: 10px;
+}
+
+.spacer-lg {
+	margin: 40px;
+}
+
+.indent1 {
+	padding: 4px 20px;
+}
+
+.indent2 {
+	padding: 4px 40px;
+}
+
+.risk-3 {
+	background-color: red;
+	color: #FFF;
+}
+
+.risk-2 {
+	background-color: orange;
+	color: #FFF;
+}
+
+.risk-1 {
+	background-color: yellow;
+	color: #000;
+}
+
+.risk-0 {
+	background-color: blue;
+	color: #FFF;
+}
+
+.risk--1 {
+	background-color: green;
+	color: #FFF;
+}
+
+.summary {
+	width: 45%;
+}
+
+.summary th {
+	color: #FFF;
+}
+
+.summary100 {
+	width: 100%;
+}
+
+.summary80 {
+	width: 80%;
+}
+
+.tdconstrainer {
+	width: 9.1%;
+	padding: 0
+}
+
+.alerts {
+	width: 75%;
+}
+
+.alerts th {
+	color: #FFF;
+}
+
+.results {
+	width: 100%;
+}
+
+.results th {
+	text-align: left;
+}
+
+.left-header {
+	display: inline-block;
+}
+
+.pass {
+	background: green;
+	color: white
+}
+
+.pass::before {
+	content: '\2714';
+	color: white
+}
+
+.fail {
+	background: red;
+	color: white
+}
+
+.fail::before {
+	content: '\2716';
+	color: white
+}
+
+.alert-3b::before {
+	content: '\2691';
+	color: red
+}
+
+.alert-2b::before {
+	content: '\2691 ';
+	color: orange
+}
+
+.alert-1b::before {
+	content: '\2691';
+	color: yellow
+}
+
+.alert-0b::before {
+	content: '\2691';
+	color: blue
+}
+
+.alert-3a::after {
+	content: '\2691';
+	color: red
+}
+
+.alert-2a::after {
+	content: '\2691 ';
+	color: orange
+}
+
+.alert-1a::after {
+	content: '\2691';
+	color: yellow
+}
+
+.alert-0a::after {
+	content: '\2691';
+	color: blue
+}
+
+.lm2 {
+	margin-left: 2em;
+}
+
+.smallnote {
+	font-size: 0.75em
+}
+
+.alwayswhite {
+	color: white
+}
+
+.script-diagnostic-screenshot {
+	display: block;
+	max-width: 100%;
+	height: auto;
+}
+</style>
+</head>
+<body>
+	<h1>
+		<!-- The ZAP by Checkmark Logo -->
+		<img
+			src="data:image/png;base64,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"
+			alt="" />
+		ZAP Scanning Report
+	</h1>
+	<p />
+	
+
+	<h2>
+		
+		Site: http://helpdesk-control-plane:30080
+		
+	</h2>
+
+	<h3>
+		Generated on Thu, 5 Nov 2026 00:33:36
+	</h3>
+
+	<h3>
+		ZAP Version: 2.17.0
+	</h3>
+
+	<h4>
+		ZAP by <a href="https://checkmarx.com/">Checkmarx</a>
+	</h4>
+
+	
+		<h3 class="left-header">Summary of Alerts</h3>
+		<table class="summary">
+			<tr>
+				<th width="45%"
+					height="24">Risk Level</th>
+				<th width="55%"
+					align="center">Number of Alerts</th>
+			</tr>
+			<tr>
+				<td class="risk-3">
+					<div>High</div>
+				</td>
+				<td align="center">
+					<div>0</div>
+				</td>
+			</tr>
+			<tr>
+				<td class="risk-2">
+					<div>Medium</div>
+				</td>
+				<td align="center">
+					<div>2</div>
+				</td>
+			</tr>
+			<tr>
+				<td class="risk-1">
+					<div>Low</div>
+				</td>
+				<td align="center">
+					<div>4</div>
+				</td>
+			</tr>
+			<tr>
+				<td class="risk-0">
+					<div>Informational</div>
+				</td>
+				<td align="center">
+					<div>3</div>
+				</td>
+			</tr>
+			<tr>
+				<td class="risk--1">
+					<div>				False Positives:</div>
+				</td>
+				<td align="center">
+					<div>0</div>
+				</td>
+			</tr>
+		</table>
+		<div class="spacer-lg"></div>
+	
+	
+	
+		<h3 class="left-header">Insights</h3>
+		
+		<table class="summary100">
+			<tr>
+				<th height="24">Level</th>
+				<th>Reason</th>
+				<th>Site</th>
+				<th>Description</th>
+				<th>Statistic</th>
+			</tr>
+			
+				<tr>
+				<td class="risk-0">
+					<div>Info</div>
+				</td>
+				<td>
+					<div>Informational</div>
+				</td>
+				<td>
+					<div>http://helpdesk-control-plane:30080</div>
+				</td>
+				<td>
+					<div>Percentage of responses with status code 2xx</div>
+				</td>
+				<td align="center">
+					<div>100 %</div>
+				</td>
+				</tr>
+			
+				<tr>
+				<td class="risk-0">
+					<div>Info</div>
+				</td>
+				<td>
+					<div>Informational</div>
+				</td>
+				<td>
+					<div>http://helpdesk-control-plane:30080</div>
+				</td>
+				<td>
+					<div>Percentage of endpoints with content type text/html</div>
+				</td>
+				<td align="center">
+					<div>100 %</div>
+				</td>
+				</tr>
+			
+				<tr>
+				<td class="risk-0">
+					<div>Info</div>
+				</td>
+				<td>
+					<div>Informational</div>
+				</td>
+				<td>
+					<div>http://helpdesk-control-plane:30080</div>
+				</td>
+				<td>
+					<div>Percentage of endpoints with method GET</div>
+				</td>
+				<td align="center">
+					<div>100 %</div>
+				</td>
+				</tr>
+			
+				<tr>
+				<td class="risk-0">
+					<div>Info</div>
+				</td>
+				<td>
+					<div>Informational</div>
+				</td>
+				<td>
+					<div>http://helpdesk-control-plane:30080</div>
+				</td>
+				<td>
+					<div>Count of total endpoints</div>
+				</td>
+				<td align="center">
+					<div>3   </div>
+				</td>
+				</tr>
+			
+		</table>
+		<div class="spacer-lg"></div>
+	
+
+	
+
+	
+		
+			<h3>Summary of Sequences</h3>
+			<p class="smallnote">For each step: result (Pass/Fail) - risk (of highest alert(s) for the step, if any).</p>
+
+			
+				</table>
+			
+		
+	</th:block>
+
+	
+		<h3>Alerts</h3>
+		<table class="alerts">
+			<tr>
+				<th width="60%" height="24">Name</th>
+				<th width="20%"
+					align="center">Risk Level</th>
+				<th width="20%"
+					align="center">Number of Instances</th>
+			</tr>
+			<tr>
+				<td><a href="#10055">CSP: script-src unsafe-inline</a></td>
+				<td align="center" class="risk-2">Medium</td>
+				
+				
+				<td align="center">4</td>
+				
+			</tr>
+			<tr>
+				<td><a href="#10055">CSP: style-src unsafe-inline</a></td>
+				<td align="center" class="risk-2">Medium</td>
+				
+				
+				<td align="center">4</td>
+				
+			</tr>
+			<tr>
+				<td><a href="#90004">Cross-Origin-Embedder-Policy Header Missing or Invalid</a></td>
+				<td align="center" class="risk-1">Low</td>
+				
+				
+				<td align="center">3</td>
+				
+			</tr>
+			<tr>
+				<td><a href="#90004">Cross-Origin-Opener-Policy Header Missing or Invalid</a></td>
+				<td align="center" class="risk-1">Low</td>
+				
+				
+				<td align="center">3</td>
+				
+			</tr>
+			<tr>
+				<td><a href="#90004">Cross-Origin-Resource-Policy Header Missing or Invalid</a></td>
+				<td align="center" class="risk-1">Low</td>
+				
+				
+				<td align="center">3</td>
+				
+			</tr>
+			<tr>
+				<td><a href="#10063">Permissions Policy Header Not Set</a></td>
+				<td align="center" class="risk-1">Low</td>
+				
+				
+				<td align="center">4</td>
+				
+			</tr>
+			<tr>
+				<td><a href="#10027">Information Disclosure - Suspicious Comments</a></td>
+				<td align="center" class="risk-0">Informational</td>
+				
+				
+				<td align="center">4</td>
+				
+			</tr>
+			<tr>
+				<td><a href="#10109">Modern Web Application</a></td>
+				<td align="center" class="risk-0">Informational</td>
+				
+				
+				<td align="center">4</td>
+				
+			</tr>
+			<tr>
+				<td><a href="#10049">Storable and Cacheable Content</a></td>
+				<td align="center" class="risk-0">Informational</td>
+				
+				
+				<td align="center">4</td>
+				
+			</tr>
+		</table>
+		<div class="spacer-lg"></div>
+	
+
+	
+		<h3>Alert Detail</h3>
+		
+			<table class="results">
+				<tr height="24">
+					<th width="20%" class="risk-2"><a
+						id="10055"></a>
+						<div>Medium</div></th>
+					<th class="risk-2">CSP: script-src unsafe-inline</th>
+				</tr>
+				<tr>
+					<td width="20%">Description</td>
+					<td width="80%">
+							<div>Content Security Policy (CSP) is an added layer of security that helps to detect and mitigate certain types of attacks. Including (but not limited to) Cross Site Scripting (XSS), and data injection attacks. These attacks are used for everything from data theft to site defacement or distribution of malware. CSP provides a set of standard HTTP headers that allow website owners to declare approved sources of content that browsers should be allowed to load on that page — covered types are JavaScript, CSS, HTML frames, fonts, images and embeddable objects such as Java applets, ActiveX, audio and video files.</div>
+							
+						</td>
+				</tr>
+				<TR vAlign="top">
+					<TD colspan="2"></TD>
+				</TR>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080">http://helpdesk-control-plane:30080</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%">Content-Security-Policy</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%">default-src &#39;self&#39;; script-src &#39;self&#39; &#39;unsafe-inline&#39;; style-src &#39;self&#39; &#39;unsafe-inline&#39;; img-src &#39;self&#39; data:; connect-src &#39;self&#39;; object-src &#39;none&#39;; base-uri &#39;none&#39;; frame-ancestors &#39;none&#39;; form-action &#39;self&#39;</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%">
+							<div>script-src includes unsafe-inline.</div>
+							
+						</td>
+					</tr>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080/health">http://helpdesk-control-plane:30080/health</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080/health</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%">Content-Security-Policy</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%">default-src &#39;self&#39;; script-src &#39;self&#39; &#39;unsafe-inline&#39;; style-src &#39;self&#39; &#39;unsafe-inline&#39;; img-src &#39;self&#39; data:; connect-src &#39;self&#39;; object-src &#39;none&#39;; base-uri &#39;none&#39;; frame-ancestors &#39;none&#39;; form-action &#39;self&#39;</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%">
+							<div>script-src includes unsafe-inline.</div>
+							
+						</td>
+					</tr>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080/robots.txt">http://helpdesk-control-plane:30080/robots.txt</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080/robots.txt</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%">Content-Security-Policy</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%">default-src &#39;self&#39;; script-src &#39;self&#39; &#39;unsafe-inline&#39;; style-src &#39;self&#39; &#39;unsafe-inline&#39;; img-src &#39;self&#39; data:; connect-src &#39;self&#39;; object-src &#39;none&#39;; base-uri &#39;none&#39;; frame-ancestors &#39;none&#39;; form-action &#39;self&#39;</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%">
+							<div>script-src includes unsafe-inline.</div>
+							
+						</td>
+					</tr>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080/sitemap.xml">http://helpdesk-control-plane:30080/sitemap.xml</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080/sitemap.xml</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%">Content-Security-Policy</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%">default-src &#39;self&#39;; script-src &#39;self&#39; &#39;unsafe-inline&#39;; style-src &#39;self&#39; &#39;unsafe-inline&#39;; img-src &#39;self&#39; data:; connect-src &#39;self&#39;; object-src &#39;none&#39;; base-uri &#39;none&#39;; frame-ancestors &#39;none&#39;; form-action &#39;self&#39;</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%">
+							<div>script-src includes unsafe-inline.</div>
+							
+						</td>
+					</tr>
+				
+				<tr>
+					<td width="20%">Instances</td>
+					
+					
+					<td width="80%">4</td>
+					
+				</tr>
+				<tr>
+					<td width="20%">Solution</td>
+					<td width="80%">
+							<div>Ensure that your web server, application server, load balancer, etc. is properly configured to set the Content-Security-Policy header.</div>
+							
+						</td>
+				</tr>
+				<tr>
+					<td width="20%">Reference</td>
+					<td width="80%">
+							<a href="https://www.w3.org/TR/CSP/">https://www.w3.org/TR/CSP/</a>
+							<br />
+						
+							<a href="https://caniuse.com/#search=content+security+policy">https://caniuse.com/#search=content+security+policy</a>
+							<br />
+						
+							<a href="https://content-security-policy.com/">https://content-security-policy.com/</a>
+							<br />
+						
+							<a href="https://github.com/HtmlUnit/htmlunit-csp">https://github.com/HtmlUnit/htmlunit-csp</a>
+							<br />
+						
+							<a href="https://web.dev/articles/csp#resource-options">https://web.dev/articles/csp#resource-options</a>
+							
+						</td>
+				</tr>
+				<tr>
+					<td width="20%">CWE Id</td>
+					<td width="80%"><a
+						href="https://cwe.mitre.org/data/definitions/693.html">693</a></td>
+				</tr>
+				<tr>
+					<td width="20%">WASC Id</td>
+					<td width="80%">15</td>
+				</tr>
+				<tr>
+					<td width="20%">Plugin Id</td>
+					<td width="80%"><a
+						href="https://www.zaproxy.org/docs/alerts/10055/">10055</a></td>
+				</tr>
+			</table>
+			<div class="spacer"></div>
+		
+			<table class="results">
+				<tr height="24">
+					<th width="20%" class="risk-2"><a
+						id="10055"></a>
+						<div>Medium</div></th>
+					<th class="risk-2">CSP: style-src unsafe-inline</th>
+				</tr>
+				<tr>
+					<td width="20%">Description</td>
+					<td width="80%">
+							<div>Content Security Policy (CSP) is an added layer of security that helps to detect and mitigate certain types of attacks. Including (but not limited to) Cross Site Scripting (XSS), and data injection attacks. These attacks are used for everything from data theft to site defacement or distribution of malware. CSP provides a set of standard HTTP headers that allow website owners to declare approved sources of content that browsers should be allowed to load on that page — covered types are JavaScript, CSS, HTML frames, fonts, images and embeddable objects such as Java applets, ActiveX, audio and video files.</div>
+							
+						</td>
+				</tr>
+				<TR vAlign="top">
+					<TD colspan="2"></TD>
+				</TR>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080">http://helpdesk-control-plane:30080</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%">Content-Security-Policy</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%">default-src &#39;self&#39;; script-src &#39;self&#39; &#39;unsafe-inline&#39;; style-src &#39;self&#39; &#39;unsafe-inline&#39;; img-src &#39;self&#39; data:; connect-src &#39;self&#39;; object-src &#39;none&#39;; base-uri &#39;none&#39;; frame-ancestors &#39;none&#39;; form-action &#39;self&#39;</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%">
+							<div>style-src includes unsafe-inline.</div>
+							
+						</td>
+					</tr>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080/health">http://helpdesk-control-plane:30080/health</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080/health</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%">Content-Security-Policy</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%">default-src &#39;self&#39;; script-src &#39;self&#39; &#39;unsafe-inline&#39;; style-src &#39;self&#39; &#39;unsafe-inline&#39;; img-src &#39;self&#39; data:; connect-src &#39;self&#39;; object-src &#39;none&#39;; base-uri &#39;none&#39;; frame-ancestors &#39;none&#39;; form-action &#39;self&#39;</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%">
+							<div>style-src includes unsafe-inline.</div>
+							
+						</td>
+					</tr>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080/robots.txt">http://helpdesk-control-plane:30080/robots.txt</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080/robots.txt</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%">Content-Security-Policy</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%">default-src &#39;self&#39;; script-src &#39;self&#39; &#39;unsafe-inline&#39;; style-src &#39;self&#39; &#39;unsafe-inline&#39;; img-src &#39;self&#39; data:; connect-src &#39;self&#39;; object-src &#39;none&#39;; base-uri &#39;none&#39;; frame-ancestors &#39;none&#39;; form-action &#39;self&#39;</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%">
+							<div>style-src includes unsafe-inline.</div>
+							
+						</td>
+					</tr>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080/sitemap.xml">http://helpdesk-control-plane:30080/sitemap.xml</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080/sitemap.xml</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%">Content-Security-Policy</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%">default-src &#39;self&#39;; script-src &#39;self&#39; &#39;unsafe-inline&#39;; style-src &#39;self&#39; &#39;unsafe-inline&#39;; img-src &#39;self&#39; data:; connect-src &#39;self&#39;; object-src &#39;none&#39;; base-uri &#39;none&#39;; frame-ancestors &#39;none&#39;; form-action &#39;self&#39;</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%">
+							<div>style-src includes unsafe-inline.</div>
+							
+						</td>
+					</tr>
+				
+				<tr>
+					<td width="20%">Instances</td>
+					
+					
+					<td width="80%">4</td>
+					
+				</tr>
+				<tr>
+					<td width="20%">Solution</td>
+					<td width="80%">
+							<div>Ensure that your web server, application server, load balancer, etc. is properly configured to set the Content-Security-Policy header.</div>
+							
+						</td>
+				</tr>
+				<tr>
+					<td width="20%">Reference</td>
+					<td width="80%">
+							<a href="https://www.w3.org/TR/CSP/">https://www.w3.org/TR/CSP/</a>
+							<br />
+						
+							<a href="https://caniuse.com/#search=content+security+policy">https://caniuse.com/#search=content+security+policy</a>
+							<br />
+						
+							<a href="https://content-security-policy.com/">https://content-security-policy.com/</a>
+							<br />
+						
+							<a href="https://github.com/HtmlUnit/htmlunit-csp">https://github.com/HtmlUnit/htmlunit-csp</a>
+							<br />
+						
+							<a href="https://web.dev/articles/csp#resource-options">https://web.dev/articles/csp#resource-options</a>
+							
+						</td>
+				</tr>
+				<tr>
+					<td width="20%">CWE Id</td>
+					<td width="80%"><a
+						href="https://cwe.mitre.org/data/definitions/693.html">693</a></td>
+				</tr>
+				<tr>
+					<td width="20%">WASC Id</td>
+					<td width="80%">15</td>
+				</tr>
+				<tr>
+					<td width="20%">Plugin Id</td>
+					<td width="80%"><a
+						href="https://www.zaproxy.org/docs/alerts/10055/">10055</a></td>
+				</tr>
+			</table>
+			<div class="spacer"></div>
+		
+			<table class="results">
+				<tr height="24">
+					<th width="20%" class="risk-1"><a
+						id="90004"></a>
+						<div>Low</div></th>
+					<th class="risk-1">Cross-Origin-Embedder-Policy Header Missing or Invalid</th>
+				</tr>
+				<tr>
+					<td width="20%">Description</td>
+					<td width="80%">
+							<div>Cross-Origin-Embedder-Policy header is a response header that prevents a document from loading any cross-origin resources that don&#39;t explicitly grant the document permission (using CORP or CORS).</div>
+							
+						</td>
+				</tr>
+				<TR vAlign="top">
+					<TD colspan="2"></TD>
+				</TR>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080">http://helpdesk-control-plane:30080</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%">Cross-Origin-Embedder-Policy</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%"></td>
+					</tr>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080/robots.txt">http://helpdesk-control-plane:30080/robots.txt</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080/robots.txt</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%">Cross-Origin-Embedder-Policy</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%"></td>
+					</tr>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080/sitemap.xml">http://helpdesk-control-plane:30080/sitemap.xml</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080/sitemap.xml</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%">Cross-Origin-Embedder-Policy</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%"></td>
+					</tr>
+				
+				<tr>
+					<td width="20%">Instances</td>
+					
+					
+					<td width="80%">3</td>
+					
+				</tr>
+				<tr>
+					<td width="20%">Solution</td>
+					<td width="80%">
+							<div>Ensure that the application/web server sets the Cross-Origin-Embedder-Policy header appropriately, and that it sets the Cross-Origin-Embedder-Policy header to &#39;require-corp&#39; for documents.</div>
+							<br />
+						
+							<div>If possible, ensure that the end user uses a standards-compliant and modern web browser that supports the Cross-Origin-Embedder-Policy header (https://caniuse.com/mdn-http_headers_cross-origin-embedder-policy).</div>
+							
+						</td>
+				</tr>
+				<tr>
+					<td width="20%">Reference</td>
+					<td width="80%">
+							<a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Embedder-Policy">https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Embedder-Policy</a>
+							
+						</td>
+				</tr>
+				<tr>
+					<td width="20%">CWE Id</td>
+					<td width="80%"><a
+						href="https://cwe.mitre.org/data/definitions/693.html">693</a></td>
+				</tr>
+				<tr>
+					<td width="20%">WASC Id</td>
+					<td width="80%">14</td>
+				</tr>
+				<tr>
+					<td width="20%">Plugin Id</td>
+					<td width="80%"><a
+						href="https://www.zaproxy.org/docs/alerts/90004/">90004</a></td>
+				</tr>
+			</table>
+			<div class="spacer"></div>
+		
+			<table class="results">
+				<tr height="24">
+					<th width="20%" class="risk-1"><a
+						id="90004"></a>
+						<div>Low</div></th>
+					<th class="risk-1">Cross-Origin-Opener-Policy Header Missing or Invalid</th>
+				</tr>
+				<tr>
+					<td width="20%">Description</td>
+					<td width="80%">
+							<div>Cross-Origin-Opener-Policy header is a response header that allows a site to control if others included documents share the same browsing context. Sharing the same browsing context with untrusted documents might lead to data leak.</div>
+							
+						</td>
+				</tr>
+				<TR vAlign="top">
+					<TD colspan="2"></TD>
+				</TR>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080">http://helpdesk-control-plane:30080</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%">Cross-Origin-Opener-Policy</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%"></td>
+					</tr>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080/robots.txt">http://helpdesk-control-plane:30080/robots.txt</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080/robots.txt</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%">Cross-Origin-Opener-Policy</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%"></td>
+					</tr>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080/sitemap.xml">http://helpdesk-control-plane:30080/sitemap.xml</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080/sitemap.xml</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%">Cross-Origin-Opener-Policy</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%"></td>
+					</tr>
+				
+				<tr>
+					<td width="20%">Instances</td>
+					
+					
+					<td width="80%">3</td>
+					
+				</tr>
+				<tr>
+					<td width="20%">Solution</td>
+					<td width="80%">
+							<div>Ensure that the application/web server sets the Cross-Origin-Opener-Policy header appropriately, and that it sets the Cross-Origin-Opener-Policy header to &#39;same-origin&#39; for documents.</div>
+							<br />
+						
+							<div>&#39;same-origin-allow-popups&#39; is considered as less secured and should be avoided.</div>
+							<br />
+						
+							<div>If possible, ensure that the end user uses a standards-compliant and modern web browser that supports the Cross-Origin-Opener-Policy header (https://caniuse.com/mdn-http_headers_cross-origin-opener-policy).</div>
+							
+						</td>
+				</tr>
+				<tr>
+					<td width="20%">Reference</td>
+					<td width="80%">
+							<a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Opener-Policy">https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Opener-Policy</a>
+							
+						</td>
+				</tr>
+				<tr>
+					<td width="20%">CWE Id</td>
+					<td width="80%"><a
+						href="https://cwe.mitre.org/data/definitions/693.html">693</a></td>
+				</tr>
+				<tr>
+					<td width="20%">WASC Id</td>
+					<td width="80%">14</td>
+				</tr>
+				<tr>
+					<td width="20%">Plugin Id</td>
+					<td width="80%"><a
+						href="https://www.zaproxy.org/docs/alerts/90004/">90004</a></td>
+				</tr>
+			</table>
+			<div class="spacer"></div>
+		
+			<table class="results">
+				<tr height="24">
+					<th width="20%" class="risk-1"><a
+						id="90004"></a>
+						<div>Low</div></th>
+					<th class="risk-1">Cross-Origin-Resource-Policy Header Missing or Invalid</th>
+				</tr>
+				<tr>
+					<td width="20%">Description</td>
+					<td width="80%">
+							<div>Cross-Origin-Resource-Policy header is an opt-in header designed to counter side-channels attacks like Spectre. Resource should be specifically set as shareable amongst different origins.</div>
+							
+						</td>
+				</tr>
+				<TR vAlign="top">
+					<TD colspan="2"></TD>
+				</TR>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080">http://helpdesk-control-plane:30080</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%">Cross-Origin-Resource-Policy</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%"></td>
+					</tr>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080/robots.txt">http://helpdesk-control-plane:30080/robots.txt</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080/robots.txt</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%">Cross-Origin-Resource-Policy</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%"></td>
+					</tr>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080/sitemap.xml">http://helpdesk-control-plane:30080/sitemap.xml</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080/sitemap.xml</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%">Cross-Origin-Resource-Policy</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%"></td>
+					</tr>
+				
+				<tr>
+					<td width="20%">Instances</td>
+					
+					
+					<td width="80%">3</td>
+					
+				</tr>
+				<tr>
+					<td width="20%">Solution</td>
+					<td width="80%">
+							<div>Ensure that the application/web server sets the Cross-Origin-Resource-Policy header appropriately, and that it sets the Cross-Origin-Resource-Policy header to &#39;same-origin&#39; for all web pages.</div>
+							<br />
+						
+							<div>&#39;same-site&#39; is considered as less secured and should be avoided.</div>
+							<br />
+						
+							<div>If resources must be shared, set the header to &#39;cross-origin&#39;.</div>
+							<br />
+						
+							<div>If possible, ensure that the end user uses a standards-compliant and modern web browser that supports the Cross-Origin-Resource-Policy header (https://caniuse.com/mdn-http_headers_cross-origin-resource-policy).</div>
+							
+						</td>
+				</tr>
+				<tr>
+					<td width="20%">Reference</td>
+					<td width="80%">
+							<a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Embedder-Policy">https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Embedder-Policy</a>
+							
+						</td>
+				</tr>
+				<tr>
+					<td width="20%">CWE Id</td>
+					<td width="80%"><a
+						href="https://cwe.mitre.org/data/definitions/693.html">693</a></td>
+				</tr>
+				<tr>
+					<td width="20%">WASC Id</td>
+					<td width="80%">14</td>
+				</tr>
+				<tr>
+					<td width="20%">Plugin Id</td>
+					<td width="80%"><a
+						href="https://www.zaproxy.org/docs/alerts/90004/">90004</a></td>
+				</tr>
+			</table>
+			<div class="spacer"></div>
+		
+			<table class="results">
+				<tr height="24">
+					<th width="20%" class="risk-1"><a
+						id="10063"></a>
+						<div>Low</div></th>
+					<th class="risk-1">Permissions Policy Header Not Set</th>
+				</tr>
+				<tr>
+					<td width="20%">Description</td>
+					<td width="80%">
+							<div>Permissions Policy Header is an added layer of security that helps to restrict from unauthorized access or usage of browser/client features by web resources. This policy ensures the user privacy by limiting or specifying the features of the browsers can be used by the web resources. Permissions Policy provides a set of standard HTTP headers that allow website owners to limit which features of browsers can be used by the page such as camera, microphone, location, full screen etc.</div>
+							
+						</td>
+				</tr>
+				<TR vAlign="top">
+					<TD colspan="2"></TD>
+				</TR>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080">http://helpdesk-control-plane:30080</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%"></td>
+					</tr>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080/health">http://helpdesk-control-plane:30080/health</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080/health</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%"></td>
+					</tr>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080/robots.txt">http://helpdesk-control-plane:30080/robots.txt</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080/robots.txt</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%"></td>
+					</tr>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080/sitemap.xml">http://helpdesk-control-plane:30080/sitemap.xml</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080/sitemap.xml</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%"></td>
+					</tr>
+				
+				<tr>
+					<td width="20%">Instances</td>
+					
+					
+					<td width="80%">4</td>
+					
+				</tr>
+				<tr>
+					<td width="20%">Solution</td>
+					<td width="80%">
+							<div>Ensure that your web server, application server, load balancer, etc. is configured to set the Permissions-Policy header.</div>
+							
+						</td>
+				</tr>
+				<tr>
+					<td width="20%">Reference</td>
+					<td width="80%">
+							<a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy">https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy</a>
+							<br />
+						
+							<a href="https://developer.chrome.com/blog/feature-policy/">https://developer.chrome.com/blog/feature-policy/</a>
+							<br />
+						
+							<a href="https://scotthelme.co.uk/a-new-security-header-feature-policy/">https://scotthelme.co.uk/a-new-security-header-feature-policy/</a>
+							<br />
+						
+							<a href="https://w3c.github.io/webappsec-feature-policy/">https://w3c.github.io/webappsec-feature-policy/</a>
+							<br />
+						
+							<a href="https://www.smashingmagazine.com/2018/12/feature-policy/">https://www.smashingmagazine.com/2018/12/feature-policy/</a>
+							
+						</td>
+				</tr>
+				<tr>
+					<td width="20%">CWE Id</td>
+					<td width="80%"><a
+						href="https://cwe.mitre.org/data/definitions/693.html">693</a></td>
+				</tr>
+				<tr>
+					<td width="20%">WASC Id</td>
+					<td width="80%">15</td>
+				</tr>
+				<tr>
+					<td width="20%">Plugin Id</td>
+					<td width="80%"><a
+						href="https://www.zaproxy.org/docs/alerts/10063/">10063</a></td>
+				</tr>
+			</table>
+			<div class="spacer"></div>
+		
+			<table class="results">
+				<tr height="24">
+					<th width="20%" class="risk-0"><a
+						id="10027"></a>
+						<div>Informational</div></th>
+					<th class="risk-0">Information Disclosure - Suspicious Comments</th>
+				</tr>
+				<tr>
+					<td width="20%">Description</td>
+					<td width="80%">
+							<div>The response appears to contain suspicious comments which may help an attacker.</div>
+							
+						</td>
+				</tr>
+				<TR vAlign="top">
+					<TD colspan="2"></TD>
+				</TR>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080">http://helpdesk-control-plane:30080</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%">estion des comptes (Admin) --&gt;</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%">
+							<div>The following pattern was used: \bADMIN\b and was detected 3 times, the first in likely comment: &quot;&lt;!-- 3.4 Vue Gestion des comptes (Admin) --&gt;&quot;, see evidence field for the suspicious comment/snippet.</div>
+							
+						</td>
+					</tr>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080/health">http://helpdesk-control-plane:30080/health</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080/health</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%">estion des comptes (Admin) --&gt;</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%">
+							<div>The following pattern was used: \bADMIN\b and was detected 3 times, the first in likely comment: &quot;&lt;!-- 3.4 Vue Gestion des comptes (Admin) --&gt;&quot;, see evidence field for the suspicious comment/snippet.</div>
+							
+						</td>
+					</tr>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080/robots.txt">http://helpdesk-control-plane:30080/robots.txt</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080/robots.txt</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%">estion des comptes (Admin) --&gt;</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%">
+							<div>The following pattern was used: \bADMIN\b and was detected 3 times, the first in likely comment: &quot;&lt;!-- 3.4 Vue Gestion des comptes (Admin) --&gt;&quot;, see evidence field for the suspicious comment/snippet.</div>
+							
+						</td>
+					</tr>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080/sitemap.xml">http://helpdesk-control-plane:30080/sitemap.xml</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080/sitemap.xml</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%">estion des comptes (Admin) --&gt;</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%">
+							<div>The following pattern was used: \bADMIN\b and was detected 3 times, the first in likely comment: &quot;&lt;!-- 3.4 Vue Gestion des comptes (Admin) --&gt;&quot;, see evidence field for the suspicious comment/snippet.</div>
+							
+						</td>
+					</tr>
+				
+				<tr>
+					<td width="20%">Instances</td>
+					
+					
+					<td width="80%">4</td>
+					
+				</tr>
+				<tr>
+					<td width="20%">Solution</td>
+					<td width="80%">
+							<div>Remove all comments that return information that may help an attacker and fix any underlying problems they refer to.</div>
+							
+						</td>
+				</tr>
+				<tr>
+					<td width="20%">Reference</td>
+					<td width="80%"></td>
+				</tr>
+				<tr>
+					<td width="20%">CWE Id</td>
+					<td width="80%"><a
+						href="https://cwe.mitre.org/data/definitions/615.html">615</a></td>
+				</tr>
+				<tr>
+					<td width="20%">WASC Id</td>
+					<td width="80%">13</td>
+				</tr>
+				<tr>
+					<td width="20%">Plugin Id</td>
+					<td width="80%"><a
+						href="https://www.zaproxy.org/docs/alerts/10027/">10027</a></td>
+				</tr>
+			</table>
+			<div class="spacer"></div>
+		
+			<table class="results">
+				<tr height="24">
+					<th width="20%" class="risk-0"><a
+						id="10109"></a>
+						<div>Informational</div></th>
+					<th class="risk-0">Modern Web Application</th>
+				</tr>
+				<tr>
+					<td width="20%">Description</td>
+					<td width="80%">
+							<div>The application appears to be a modern web application. If you need to explore it automatically then the Client Spider may well be more effective than the standard one.</div>
+							
+						</td>
+				</tr>
+				<TR vAlign="top">
+					<TD colspan="2"></TD>
+				</TR>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080">http://helpdesk-control-plane:30080</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%">&lt;script&gt;
+    // État global de l&#39;application
+    let authToken = localStorage.getItem(&#39;hd_token&#39;) || &#39;&#39;;
+    let currentUser = JSON.parse(localStorage.getItem(&#39;hd_user&#39;) || &#39;null&#39;);
+    let currentTicketsList = [];
+    let currentActiveTicketId = null;
+    let notifIntervalId = null;
+
+    // Raccourci DOM
+    const $ = (id) =&gt; document.getElementById(id);
+
+    // Initialisation
+    window.addEventListener(&#39;DOMContentLoaded&#39;, async () =&gt; {
+      if (authToken &amp;&amp; currentUser) {
+        setupAuthenticatedUI();
+      } else {
+        setupGuestUI();
+      }
+    });
+
+    // Client API
+    async function api(path, options = {}) {
+      const headers = { &#39;Content-Type&#39;: &#39;application/json&#39;, ...(options.headers || {}) };
+      if (authToken) {
+        headers[&#39;Authorization&#39;] = &#39;Bearer &#39; + authToken;
+      }
+      try {
+        const res = await fetch(&#39;/api&#39; + path, { ...options, headers });
+        const data = await res.json().catch(() =&gt; ({}));
+        if (res.status === 401 &amp;&amp; authToken) {
+          showToast(&#39;Session expirée. Veuillez vous reconnecter.&#39;, &#39;error&#39;);
+          logout();
+          return null;
+        }
+        if (!res.ok) {
+          throw new Error(data.error || &#39;Erreur serveur HTTP &#39; + res.status);
+        }
+        return data;
+      } catch (err) {
+        showToast(err.message, &#39;error&#39;);
+        throw err;
+      }
+    }
+
+    // Authentification
+    function openLoginModal() {
+      $(&#39;loginModal&#39;).classList.remove(&#39;hide&#39;);
+      $(&#39;loginUsername&#39;).focus();
+    }
+    function closeLoginModal() {
+      $(&#39;loginModal&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;loginError&#39;).classList.add(&#39;hide&#39;);
+    }
+    function fillLogin(user) {
+      $(&#39;loginUsername&#39;).value = user;
+      $(&#39;loginPassword&#39;).value = &#39;Passw0rd!&#39;;
+      performLogin();
+    }
+    function togglePasswordVisibility(id) {
+      const input = $(id);
+      input.type = input.type === &#39;password&#39; ? &#39;text&#39; : &#39;password&#39;;
+    }
+
+    async function performLogin() {
+      const u = $(&#39;loginUsername&#39;).value.trim();
+      const p = $(&#39;loginPassword&#39;).value;
+      if (!u || !p) {
+        showLoginError(&#39;Veuillez renseigner un identifiant et un mot de passe.&#39;);
+        return;
+      }
+      try {
+        const res = await fetch(&#39;/api/login&#39;, {
+          method: &#39;POST&#39;,
+          headers: { &#39;Content-Type&#39;: &#39;application/json&#39; },
+          body: JSON.stringify({ username: u, password: p })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          showLoginError(data.error || &#39;Échec de connexion&#39;);
+          return;
+        }
+        authToken = data.token;
+        currentUser = { username: data.username, role: data.role, full_name: data.full_name, email: data.email };
+        localStorage.setItem(&#39;hd_token&#39;, authToken);
+        localStorage.setItem(&#39;hd_user&#39;, JSON.stringify(currentUser));
+        closeLoginModal();
+        showToast(`Bienvenue, ${data.full_name || data.username} !`, &#39;success&#39;);
+        setupAuthenticatedUI();
+      } catch (e) {
+        showLoginError(e.message);
+      }
+    }
+
+    function showLoginError(msg) {
+      const el = $(&#39;loginError&#39;);
+      el.textContent = msg;
+      el.classList.remove(&#39;hide&#39;);
+    }
+
+    function logout() {
+      authToken = &#39;&#39;;
+      currentUser = null;
+      localStorage.removeItem(&#39;hd_token&#39;);
+      localStorage.removeItem(&#39;hd_user&#39;);
+      clearInterval(notifIntervalId);
+      setupGuestUI();
+      showToast(&#39;Vous êtes déconnecté.&#39;, &#39;info&#39;);
+    }
+
+    // Gestion de l&#39;affichage selon le rôle
+    function setupAuthenticatedUI() {
+      $(&#39;publicView&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;appView&#39;).classList.remove(&#39;hide&#39;);
+      $(&#39;guestNav&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;userNav&#39;).classList.remove(&#39;hide&#39;);
+      $(&#39;notifWrapper&#39;).classList.remove(&#39;hide&#39;);
+
+      $(&#39;navUsername&#39;).textContent = currentUser.username;
+      $(&#39;navRole&#39;).textContent = currentUser.role.toUpperCase();
+      $(&#39;navRole&#39;).className = &#39;role-badge role-&#39; + currentUser.role;
+      $(&#39;userAvatar&#39;).textContent = currentUser.username.charAt(0).toUpperCase();
+
+      // Ajustement des menus latéraux
+      $(&#39;menuUsers&#39;).classList.toggle(&#39;hide&#39;, currentUser.role !== &#39;admin&#39;);
+      $(&#39;menuAudit&#39;).classList.toggle(&#39;hide&#39;, currentUser.role !== &#39;admin&#39;);
+      $(&#39;menuNewTicket&#39;).classList.toggle(&#39;hide&#39;, currentUser.role === &#39;admin&#39;);
+
+      // Chargement initial
+      loadDashboardStats();
+      loadTickets();
+      pollNotifications();
+      if (!notifIntervalId) {
+        notifIntervalId = setInterval(pollNotifications, 10000);
+      }
+    }
+
+    function setupGuestUI() {
+      $(&#39;publicView&#39;).classList.remove(&#39;hide&#39;);
+      $(&#39;appView&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;guestNav&#39;).classList.remove(&#39;hide&#39;);
+      $(&#39;userNav&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;notifWrapper&#39;).classList.add(&#39;hide&#39;);
+    }
+
+    function navigateHome() {
+      if (authToken) {
+        switchView(&#39;dashboard&#39;);
+      } else {
+        setupGuestUI();
+      }
+    }
+
+    // Navigation entre les vues de l&#39;espace connecté
+    function switchView(viewName) {
+      $(&#39;dashSection&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;ticketsSection&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;detailSection&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;usersSection&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;auditSection&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;notifsViewSection&#39;).classList.add(&#39;hide&#39;);
+
+      document.querySelectorAll(&#39;.sidebar-btn&#39;).forEach(btn =&gt; btn.classList.remove(&#39;active&#39;));
+
+      if (viewName === &#39;dashboard&#39;) {
+        $(&#39;dashSection&#39;).classList.remove(&#39;hide&#39;);
+        $(&#39;sideBtnDash&#39;).classList.add(&#39;active&#39;);
+        loadDashboardStats();
+        loadTickets();
+      } else if (viewName === &#39;tickets&#39;) {
+        $(&#39;ticketsSection&#39;).classList.remove(&#39;hide&#39;);
+        $(&#39;sideBtnTickets&#39;).classList.add(&#39;active&#39;);
+        loadTickets();
+      } else if (viewName === &#39;users&#39;) {
+        $(&#39;usersSection&#39;).classList.remove(&#39;hide&#39;);
+        $(&#39;sideBtnUsers&#39;).classList.add(&#39;active&#39;);
+        loadUsers();
+      } else if (viewName === &#39;audit&#39;) {
+        $(&#39;auditSection&#39;).classList.remove(&#39;hide&#39;);
+        $(&#39;sideBtnAudit&#39;).classList.add(&#39;active&#39;);
+        loadAuditLog();
+      } else if (viewName === &#39;notifications&#39;) {
+        $(&#39;notifsViewSection&#39;).classList.remove(&#39;hide&#39;);
+        $(&#39;sideBtnNotifs&#39;).classList.add(&#39;active&#39;);
+        loadAllNotificationsView();
+      }
+    }
+
+    // Statistiques des tableaux de bord
+    async function loadDashboardStats() {
+      const container = $(&#39;statsRow&#39;);
+      container.innerHTML = &#39;&#39;;
+
+      if (currentUser.role === &#39;user&#39;) {
+        const s = await api(&#39;/user/stats&#39;);
+        if (!s) return;
+        $(&#39;dashTitle&#39;).textContent = &#39;Mes incidents personnels&#39;;
+        renderStatCard(&#39;Total de mes tickets&#39;, s.total_tickets, &#39;Déclarés par vous&#39;);
+        renderStatCard(&#39;En attente / Ouverts&#39;, s.open_tickets, &#39;À prendre en charge&#39;);
+        renderStatCard(&#39;En cours de traitement&#39;, s.in_progress_tickets, &#39;Pris par un agent&#39;);
+        renderStatCard(&#39;Résolus / Fermés&#39;, s.closed_tickets, &#39;Incidents clos&#39;);
+      } else if (currentUser.role === &#39;agent&#39;) {
+        const s = await api(&#39;/agent/stats&#39;);
+        if (!s) return;
+        $(&#39;dashTitle&#39;).textContent = &#39;File d\&#39;attente globale des incidents&#39;;
+        renderStatCard(&#39;Tickets sur la plateforme&#39;, s.total_tickets, &#39;Total&#39;);
+        renderStatCard(&#39;Nouveaux / Ouverts&#39;, s.open_tickets, &#39;Nécessite intervention&#39;);
+        renderStatCard(&#39;En cours&#39;, s.in_progress_tickets, &#39;En résolution&#39;);
+        renderStatCard(&#39;Critiques / Haute priorité&#39;, s.urgent_tickets, &#39;Action immédiate&#39;);
+      } else if (currentUser.role === &#39;admin&#39;) {
+        const s = await api(&#39;/admin/stats&#39;);
+        if (!s) return;
+        $(&#39;dashTitle&#39;).textContent = &#39;Vue d\&#39;ensemble de la plateforme&#39;;
+        renderStatCard(&#39;Utilisateurs totaux&#39;, s.users.total_users, `${s.users.active_users} actifs`);
+        renderStatCard(&#39;Tickets déclarés&#39;, s.tickets.total_tickets, `${s.tickets.open_tickets} ouverts`);
+        renderStatCard(&#39;En cours&#39;, s.tickets.in_progress_tickets, &#39;Traitement&#39;);
+        renderStatCard(&#39;Incidents résolus&#39;, s.tickets.closed_tickets, &#39;Clôturés&#39;);
+      }
+    }
+
+    function renderStatCard(title, value, sub) {
+      const card = document.createElement(&#39;div&#39;);
+      card.className = &#39;stat-card&#39;;
+      card.innerHTML = `
+        &lt;span class=&quot;stat-card-title&quot;&gt;${title}&lt;/span&gt;
+        &lt;span class=&quot;stat-card-value&quot;&gt;${value}&lt;/span&gt;
+        &lt;span class=&quot;stat-card-sub&quot;&gt;${sub}&lt;/span&gt;
+      `;
+      $(&#39;statsRow&#39;).appendChild(card);
+    }
+
+    // Gestion des Tickets (Consultation, Filtre, Recherche)
+    async function loadTickets() {
+      const status = $(&#39;filterStatus&#39;) ? $(&#39;filterStatus&#39;).value : &#39;&#39;;
+      const priority = $(&#39;filterPriority&#39;) ? $(&#39;filterPriority&#39;).value : &#39;&#39;;
+      const category = $(&#39;filterCategory&#39;) ? $(&#39;filterCategory&#39;).value : &#39;&#39;;
+      const query = $(&#39;searchInput&#39;) ? $(&#39;searchInput&#39;).value.trim() : &#39;&#39;;
+
+      let url = &#39;/tickets?&#39;;
+      if (status) url += `status=${status}&amp;`;
+      if (priority) url += `priority=${priority}&amp;`;
+      if (category) url += `category=${category}&amp;`;
+
+      if (query) {
+        url = `/search?q=${encodeURIComponent(query)}`;
+      }
+
+      const tickets = await api(url);
+      if (!tickets) return;
+      currentTicketsList = tickets;
+
+      renderTicketsTable(&#39;dashTableBody&#39;, tickets.slice(0, 5));
+      renderTicketsTable(&#39;ticketsTableBody&#39;, tickets);
+    }
+
+    function renderTicketsTable(tbodyId, rows) {
+      const tbody = $(tbodyId);
+      if (!tbody) return;
+      tbody.innerHTML = &#39;&#39;;
+
+      if (rows.length === 0) {
+        tbody.innerHTML = &#39;&lt;tr&gt;&lt;td colspan=&quot;8&quot; style=&quot;text-align:center; padding:24px; color:var(--text-muted);&quot;&gt;Aucun ticket d\&#39;incident trouvé.&lt;/td&gt;&lt;/tr&gt;&#39;;
+        return;
+      }
+
+      rows.forEach(t =&gt; {
+        const tr = document.createElement(&#39;tr&#39;);
+        const statusLabels = { open: &#39;Ouvert&#39;, in_progress: &#39;En cours&#39;, closed: &#39;Fermé&#39; };
+        const priorityClasses = { Critique: &#39;badge-critique&#39;, Haute: &#39;badge-haute&#39;, Moyenne: &#39;badge-moyenne&#39;, Basse: &#39;badge-basse&#39; };
+
+        tr.innerHTML = `
+          &lt;td&gt;&lt;strong&gt;#${t.id}&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;strong&gt;${escapeHtml(t.title)}&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;span class=&quot;badge badge-category&quot;&gt;${escapeHtml(t.category || &#39;Autre&#39;)}&lt;/span&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;span class=&quot;badge ${priorityClasses[t.priority] || &#39;badge-moyenne&#39;}&quot;&gt;${escapeHtml(t.priority || &#39;Moyenne&#39;)}&lt;/span&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;span class=&quot;badge badge-${escapeHtml(t.status)}&quot;&gt;${escapeHtml(statusLabels[t.status] || t.status)}&lt;/span&gt;&lt;/td&gt;
+          &lt;td&gt;${escapeHtml(t.owner_username || t.owner_name || &#39;Utilisateur&#39;)}&lt;/td&gt;
+          &lt;td style=&quot;color:var(--text-muted); font-size:0.8rem;&quot;&gt;${new Date(t.created_at).toLocaleDateString()}&lt;/td&gt;
+          &lt;td&gt;
+            &lt;button class=&quot;btn btn-secondary btn-sm&quot; onclick=&quot;openTicketDetail(${t.id})&quot;&gt;Consulter&lt;/button&gt;
+          &lt;/td&gt;
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function handleSearchKey(e) {
+      if (e.key === &#39;Enter&#39;) {
+        loadTickets();
+      }
+    }
+
+    // Modal Nouveau Ticket
+    function openNewTicketModal() {
+      $(&#39;ticketModal&#39;).classList.remove(&#39;hide&#39;);
+      $(&#39;ticketTitle&#39;).focus();
+    }
+    function closeNewTicketModal() {
+      $(&#39;ticketModal&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;ticketTitle&#39;).value = &#39;&#39;;
+      $(&#39;ticketDescription&#39;).value = &#39;&#39;;
+    }
+    async function submitNewTicket() {
+      const title = $(&#39;ticketTitle&#39;).value.trim();
+      const description = $(&#39;ticketDescription&#39;).value.trim();
+      const category = $(&#39;ticketCategory&#39;).value;
+      const priority = $(&#39;ticketPriority&#39;).value;
+
+      if (!title || !description) {
+        showToast(&#39;Le titre et la description sont obligatoires.&#39;, &#39;warning&#39;);
+        return;
+      }
+
+      const res = await api(&#39;/tickets&#39;, {
+        method: &#39;POST&#39;,
+        body: JSON.stringify({ title, description, category, priority })
+      });
+
+      if (res) {
+        showToast(`Ticket #${res.id} déclaré avec succès !`, &#39;success&#39;);
+        closeNewTicketModal();
+        loadDashboardStats();
+        loadTickets();
+      }
+    }
+
+    // Vue Détail d&#39;un Ticket
+    async function openTicketDetail(id) {
+      currentActiveTicketId = id;
+      await loadTicketDetail(id);
+      $(&#39;dashSection&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;ticketsSection&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;detailSection&#39;).classList.remove(&#39;hide&#39;);
+    }
+
+    function closeTicketDetail() {
+      $(&#39;detailSection&#39;).classList.add(&#39;hide&#39;);
+      switchView(&#39;tickets&#39;);
+    }
+
+    async function loadTicketDetail(id) {
+      const t = await api(&#39;/tickets/&#39; + id);
+      if (!t) return;
+
+      $(&#39;dtId&#39;).textContent = &#39;Ticket #&#39; + t.id;
+      $(&#39;dtTitle&#39;).textContent = t.title;
+      $(&#39;dtDesc&#39;).textContent = t.description;
+      $(&#39;dtOwner&#39;).textContent = `${t.owner_name || t.owner_username} (${t.owner_username})`;
+      $(&#39;dtDate&#39;).textContent = new Date(t.created_at).toLocaleString();
+
+      const statusLabels = { open: &#39;Ouvert&#39;, in_progress: &#39;En cours&#39;, closed: &#39;Fermé&#39; };
+      $(&#39;dtStatus&#39;).innerHTML = `&lt;span class=&quot;badge badge-${escapeHtml(t.status)}&quot;&gt;${escapeHtml(statusLabels[t.status] || t.status)}&lt;/span&gt;`;
+      $(&#39;dtPriority&#39;).innerHTML = `&lt;span class=&quot;badge badge-${escapeHtml(String(t.priority).toLowerCase())}&quot;&gt;${escapeHtml(t.priority)}&lt;/span&gt;`;
+      $(&#39;dtCategory&#39;).innerHTML = `&lt;span class=&quot;badge badge-category&quot;&gt;${escapeHtml(t.category)}&lt;/span&gt;`;
+
+      // Affichage du sélecteur de statut pour l&#39;agent
+      if (currentUser.role === &#39;agent&#39;) {
+        $(&#39;agentStatusBox&#39;).classList.remove(&#39;hide&#39;);
+        $(&#39;agentStatusSelect&#39;).value = t.status;
+      } else {
+        $(&#39;agentStatusBox&#39;).classList.add(&#39;hide&#39;);
+      }
+
+      // Commentaires (Démonstration Faille 2 : XSS)
+      $(&#39;dtCommentCount&#39;).textContent = (t.comments || []).length;
+      const commentsList = $(&#39;dtCommentsList&#39;);
+      commentsList.innerHTML = &#39;&#39;;
+
+      (t.comments || []).forEach(c =&gt; {
+        const li = document.createElement(&#39;li&#39;);
+        li.className = &#39;comment-card&#39;;
+
+        // VULN-002 (XSS stocké) CORRIGÉE (phase 5) : le corps du commentaire est inséré avec
+        // textContent, donc affiché comme du TEXTE et jamais interprété comme du HTML.
+        const role = escapeHtml(c.author_role || &#39;user&#39;);
+        li.innerHTML = `
+          &lt;div class=&quot;comment-header&quot;&gt;
+            &lt;strong&gt;${escapeHtml(c.author_name || c.author)} &lt;span class=&quot;role-badge role-${role}&quot;&gt;${role}&lt;/span&gt;&lt;/strong&gt;
+            &lt;span style=&quot;color:var(--text-light);&quot;&gt;${new Date(c.created_at).toLocaleString()}&lt;/span&gt;
+          &lt;/div&gt;
+        `;
+        const bodyEl = document.createElement(&#39;div&#39;);
+        bodyEl.className = &#39;comment-body&#39;;
+        bodyEl.textContent = c.body;
+        li.appendChild(bodyEl);
+
+        commentsList.appendChild(li);
+      });
+
+      // Historique des changements
+      const timeline = $(&#39;dtHistoryTimeline&#39;);
+      timeline.innerHTML = &#39;&#39;;
+      if (!t.history || t.history.length === 0) {
+        timeline.innerHTML = &#39;&lt;p style=&quot;color:var(--text-muted); font-size:0.85rem;&quot;&gt;Aucun changement d\&#39;état enregistré.&lt;/p&gt;&#39;;
+      } else {
+        t.history.forEach(h =&gt; {
+          const item = document.createElement(&#39;div&#39;);
+          item.className = &#39;timeline-item&#39;;
+          item.innerHTML = `
+            &lt;div class=&quot;timeline-dot&quot;&gt;&lt;/div&gt;
+            &lt;div class=&quot;timeline-content&quot;&gt;
+              &lt;strong&gt;${escapeHtml(h.changed_by_name || h.changed_by_username || &#39;Système&#39;)}&lt;/strong&gt;
+              &lt;span style=&quot;color:var(--text-muted);&quot;&gt; : ${escapeHtml(h.comment || `Passage à ${h.new_status}`)}&lt;/span&gt;
+              &lt;div style=&quot;font-size:0.75rem; color:var(--text-light); margin-top:2px;&quot;&gt;${new Date(h.created_at).toLocaleString()}&lt;/div&gt;
+            &lt;/div&gt;
+          `;
+          timeline.appendChild(item);
+        });
+      }
+    }
+
+    // Agent : Modification de statut
+    async function submitStatusChange() {
+      const status = $(&#39;agentStatusSelect&#39;).value;
+      const comment = $(&#39;agentStatusComment&#39;).value.trim();
+
+      const res = await api(`/tickets/${currentActiveTicketId}/status`, {
+        method: &#39;PATCH&#39;,
+        body: JSON.stringify({ status, comment })
+      });
+
+      if (res &amp;&amp; res.ok) {
+        showToast(`Statut mis à jour : ${status}`, &#39;success&#39;);
+        $(&#39;agentStatusComment&#39;).value = &#39;&#39;;
+        loadTicketDetail(currentActiveTicketId);
+        loadDashboardStats();
+      }
+    }
+
+    // Ajout d&#39;un commentaire
+    async function submitComment() {
+      const text = $(&#39;newCommentText&#39;).value.trim();
+      if (!text) {
+        showToast(&#39;Le commentaire ne peut pas être vide.&#39;, &#39;warning&#39;);
+        return;
+      }
+
+      const res = await api(`/tickets/${currentActiveTicketId}/comments`, {
+        method: &#39;POST&#39;,
+        body: JSON.stringify({ body: text })
+      });
+
+      if (res &amp;&amp; res.ok) {
+        showToast(&#39;Commentaire ajouté.&#39;, &#39;success&#39;);
+        $(&#39;newCommentText&#39;).value = &#39;&#39;;
+        loadTicketDetail(currentActiveTicketId);
+      }
+    }
+
+    // Notifications Persistantes
+    async function pollNotifications() {
+      if (!authToken) return;
+      try {
+        const res = await api(&#39;/notifications&#39;);
+        if (!res) return;
+
+        const countEl = $(&#39;notifCount&#39;);
+        if (res.unread_count &gt; 0) {
+          countEl.textContent = res.unread_count;
+          countEl.classList.remove(&#39;hide&#39;);
+        } else {
+          countEl.classList.add(&#39;hide&#39;);
+        }
+
+        renderNotificationsList(&#39;notifList&#39;, res.notifications);
+      } catch (e) {
+        // Ignorer silencieusement les erreurs de polling
+      }
+    }
+
+    function toggleNotifDropdown() {
+      const d = $(&#39;notifDropdown&#39;);
+      d.classList.toggle(&#39;show&#39;);
+    }
+
+    function renderNotificationsList(containerId, list) {
+      const container = $(containerId);
+      if (!container) return;
+      container.innerHTML = &#39;&#39;;
+
+      if (!list || list.length === 0) {
+        container.innerHTML = &#39;&lt;li class=&quot;notif-empty&quot;&gt;Aucune notification pour le moment.&lt;/li&gt;&#39;;
+        return;
+      }
+
+      list.forEach(n =&gt; {
+        const li = document.createElement(&#39;li&#39;);
+        li.className = &#39;notif-item &#39; + (n.is_read ? &#39;&#39; : &#39;unread&#39;);
+        li.innerHTML = `
+          &lt;div class=&quot;notif-item-title&quot;&gt;${escapeHtml(n.title)}&lt;/div&gt;
+          &lt;div class=&quot;notif-item-msg&quot;&gt;${escapeHtml(n.message)}&lt;/div&gt;
+          &lt;div class=&quot;notif-item-time&quot;&gt;${new Date(n.created_at).toLocaleString()}&lt;/div&gt;
+        `;
+        li.onclick = async () =&gt; {
+          if (!n.is_read) {
+            await api(`/notifications/${n.id}/read`, { method: &#39;PATCH&#39; });
+          }
+          if (n.ticket_id) {
+            $(&#39;notifDropdown&#39;).classList.remove(&#39;show&#39;);
+            openTicketDetail(n.ticket_id);
+          }
+          pollNotifications();
+        };
+        container.appendChild(li);
+      });
+    }
+
+    async function markAllNotificationsRead() {
+      await api(&#39;/notifications/read-all&#39;, { method: &#39;PATCH&#39; });
+      showToast(&#39;Toutes les notifications sont marquées comme lues.&#39;, &#39;info&#39;);
+      pollNotifications();
+    }
+
+    async function loadAllNotificationsView() {
+      const res = await api(&#39;/notifications&#39;);
+      if (res) {
+        renderNotificationsList(&#39;fullNotifList&#39;, res.notifications);
+      }
+    }
+
+    // Administration : Utilisateurs &amp; Audit
+    async function loadUsers() {
+      const users = await api(&#39;/admin/users&#39;);
+      if (!users) return;
+
+      const tbody = $(&#39;usersTableBody&#39;);
+      tbody.innerHTML = &#39;&#39;;
+      users.forEach(u =&gt; {
+        const tr = document.createElement(&#39;tr&#39;);
+        tr.innerHTML = `
+          &lt;td&gt;${u.id}&lt;/td&gt;
+          &lt;td&gt;&lt;strong&gt;${escapeHtml(u.username)}&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;${escapeHtml(u.full_name)}&lt;/td&gt;
+          &lt;td&gt;${escapeHtml(u.email || &#39;-&#39;)}&lt;/td&gt;
+          &lt;td&gt;&lt;span class=&quot;role-badge role-${escapeHtml(u.role)}&quot;&gt;${escapeHtml(String(u.role).toUpperCase())}&lt;/span&gt;&lt;/td&gt;
+          &lt;td&gt;
+            &lt;span class=&quot;badge ${u.is_active ? &#39;badge-closed&#39; : &#39;badge-open&#39;}&quot;&gt;
+              ${u.is_active ? &#39;Actif&#39; : &#39;Désactivé&#39;}
+            &lt;/span&gt;
+          &lt;/td&gt;
+          &lt;td&gt;
+            &lt;button class=&quot;btn btn-secondary btn-sm&quot; onclick=&quot;toggleUserActive(${u.id}, ${!u.is_active})&quot;&gt;
+              ${u.is_active ? &#39;Désactiver&#39; : &#39;Activer&#39;}
+            &lt;/button&gt;
+          &lt;/td&gt;
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function toggleUserActive(userId, newState) {
+      const res = await api(`/admin/users/${userId}`, {
+        method: &#39;PATCH&#39;,
+        body: JSON.stringify({ is_active: newState })
+      });
+      if (res) {
+        showToast(`Compte mis à jour : ${newState ? &#39;Actif&#39; : &#39;Désactivé&#39;}`, &#39;success&#39;);
+        loadUsers();
+      }
+    }
+
+    function openNewUserModal() {
+      $(&#39;userModal&#39;).classList.remove(&#39;hide&#39;);
+      $(&#39;newUsername&#39;).focus();
+    }
+    function closeNewUserModal() {
+      $(&#39;userModal&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;newUsername&#39;).value = &#39;&#39;;
+      $(&#39;newFullName&#39;).value = &#39;&#39;;
+      $(&#39;newEmail&#39;).value = &#39;&#39;;
+    }
+    async function submitNewUser() {
+      const username = $(&#39;newUsername&#39;).value.trim();
+      const full_name = $(&#39;newFullName&#39;).value.trim();
+      const email = $(&#39;newEmail&#39;).value.trim();
+      const role = $(&#39;newRole&#39;).value;
+      const password = $(&#39;newUserPass&#39;).value;
+
+      if (!username || !full_name || !password) {
+        showToast(&#39;Veuillez renseigner tous les champs obligatoires.&#39;, &#39;warning&#39;);
+        return;
+      }
+
+      const res = await api(&#39;/admin/users&#39;, {
+        method: &#39;POST&#39;,
+        body: JSON.stringify({ username, full_name, email, role, password })
+      });
+
+      if (res) {
+        showToast(`Utilisateur ${res.username} créé avec succès !`, &#39;success&#39;);
+        closeNewUserModal();
+        loadUsers();
+      }
+    }
+
+    async function loadAuditLog() {
+      const logs = await api(&#39;/admin/audit&#39;);
+      if (!logs) return;
+
+      const tbody = $(&#39;auditTableBody&#39;);
+      tbody.innerHTML = &#39;&#39;;
+      logs.forEach(l =&gt; {
+        const tr = document.createElement(&#39;tr&#39;);
+        tr.innerHTML = `
+          &lt;td style=&quot;color:var(--text-muted); font-size:0.8rem;&quot;&gt;${new Date(l.created_at).toLocaleString()}&lt;/td&gt;
+          &lt;td&gt;&lt;strong&gt;${escapeHtml(l.username || &#39;Anonyme&#39;)}&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;code&gt;${escapeHtml(l.action)}&lt;/code&gt;&lt;/td&gt;
+          &lt;td style=&quot;font-size:0.85rem;&quot;&gt;${escapeHtml(l.details || &#39;-&#39;)}&lt;/td&gt;
+          &lt;td&gt;&lt;code&gt;${escapeHtml(l.ip || &#39;-&#39;)}&lt;/code&gt;&lt;/td&gt;
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Utilitaires d&#39;échappement et Toast
+    function escapeHtml(str) {
+      if (!str) return &#39;&#39;;
+      return String(str)
+        .replace(/&amp;/g, &#39;&amp;amp;&#39;)
+        .replace(/&lt;/g, &#39;&amp;lt;&#39;)
+        .replace(/&gt;/g, &#39;&amp;gt;&#39;)
+        .replace(/&quot;/g, &#39;&amp;quot;&#39;)
+        .replace(/&#39;/g, &#39;&amp;#039;&#39;);
+    }
+
+    function showToast(message, type = &#39;info&#39;) {
+      const container = $(&#39;toastContainer&#39;);
+      const toast = document.createElement(&#39;div&#39;);
+      toast.className = `toast toast-${type}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() =&gt; {
+        toast.style.opacity = &#39;0&#39;;
+        toast.style.transition = &#39;opacity 0.3s ease&#39;;
+        setTimeout(() =&gt; toast.remove(), 300);
+      }, 4000);
+    }
+  &lt;/script&gt;</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%">
+							<div>No links have been found while there are scripts, which is an indication that this is a modern web application.</div>
+							
+						</td>
+					</tr>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080/health">http://helpdesk-control-plane:30080/health</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080/health</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%">&lt;script&gt;
+    // État global de l&#39;application
+    let authToken = localStorage.getItem(&#39;hd_token&#39;) || &#39;&#39;;
+    let currentUser = JSON.parse(localStorage.getItem(&#39;hd_user&#39;) || &#39;null&#39;);
+    let currentTicketsList = [];
+    let currentActiveTicketId = null;
+    let notifIntervalId = null;
+
+    // Raccourci DOM
+    const $ = (id) =&gt; document.getElementById(id);
+
+    // Initialisation
+    window.addEventListener(&#39;DOMContentLoaded&#39;, async () =&gt; {
+      if (authToken &amp;&amp; currentUser) {
+        setupAuthenticatedUI();
+      } else {
+        setupGuestUI();
+      }
+    });
+
+    // Client API
+    async function api(path, options = {}) {
+      const headers = { &#39;Content-Type&#39;: &#39;application/json&#39;, ...(options.headers || {}) };
+      if (authToken) {
+        headers[&#39;Authorization&#39;] = &#39;Bearer &#39; + authToken;
+      }
+      try {
+        const res = await fetch(&#39;/api&#39; + path, { ...options, headers });
+        const data = await res.json().catch(() =&gt; ({}));
+        if (res.status === 401 &amp;&amp; authToken) {
+          showToast(&#39;Session expirée. Veuillez vous reconnecter.&#39;, &#39;error&#39;);
+          logout();
+          return null;
+        }
+        if (!res.ok) {
+          throw new Error(data.error || &#39;Erreur serveur HTTP &#39; + res.status);
+        }
+        return data;
+      } catch (err) {
+        showToast(err.message, &#39;error&#39;);
+        throw err;
+      }
+    }
+
+    // Authentification
+    function openLoginModal() {
+      $(&#39;loginModal&#39;).classList.remove(&#39;hide&#39;);
+      $(&#39;loginUsername&#39;).focus();
+    }
+    function closeLoginModal() {
+      $(&#39;loginModal&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;loginError&#39;).classList.add(&#39;hide&#39;);
+    }
+    function fillLogin(user) {
+      $(&#39;loginUsername&#39;).value = user;
+      $(&#39;loginPassword&#39;).value = &#39;Passw0rd!&#39;;
+      performLogin();
+    }
+    function togglePasswordVisibility(id) {
+      const input = $(id);
+      input.type = input.type === &#39;password&#39; ? &#39;text&#39; : &#39;password&#39;;
+    }
+
+    async function performLogin() {
+      const u = $(&#39;loginUsername&#39;).value.trim();
+      const p = $(&#39;loginPassword&#39;).value;
+      if (!u || !p) {
+        showLoginError(&#39;Veuillez renseigner un identifiant et un mot de passe.&#39;);
+        return;
+      }
+      try {
+        const res = await fetch(&#39;/api/login&#39;, {
+          method: &#39;POST&#39;,
+          headers: { &#39;Content-Type&#39;: &#39;application/json&#39; },
+          body: JSON.stringify({ username: u, password: p })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          showLoginError(data.error || &#39;Échec de connexion&#39;);
+          return;
+        }
+        authToken = data.token;
+        currentUser = { username: data.username, role: data.role, full_name: data.full_name, email: data.email };
+        localStorage.setItem(&#39;hd_token&#39;, authToken);
+        localStorage.setItem(&#39;hd_user&#39;, JSON.stringify(currentUser));
+        closeLoginModal();
+        showToast(`Bienvenue, ${data.full_name || data.username} !`, &#39;success&#39;);
+        setupAuthenticatedUI();
+      } catch (e) {
+        showLoginError(e.message);
+      }
+    }
+
+    function showLoginError(msg) {
+      const el = $(&#39;loginError&#39;);
+      el.textContent = msg;
+      el.classList.remove(&#39;hide&#39;);
+    }
+
+    function logout() {
+      authToken = &#39;&#39;;
+      currentUser = null;
+      localStorage.removeItem(&#39;hd_token&#39;);
+      localStorage.removeItem(&#39;hd_user&#39;);
+      clearInterval(notifIntervalId);
+      setupGuestUI();
+      showToast(&#39;Vous êtes déconnecté.&#39;, &#39;info&#39;);
+    }
+
+    // Gestion de l&#39;affichage selon le rôle
+    function setupAuthenticatedUI() {
+      $(&#39;publicView&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;appView&#39;).classList.remove(&#39;hide&#39;);
+      $(&#39;guestNav&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;userNav&#39;).classList.remove(&#39;hide&#39;);
+      $(&#39;notifWrapper&#39;).classList.remove(&#39;hide&#39;);
+
+      $(&#39;navUsername&#39;).textContent = currentUser.username;
+      $(&#39;navRole&#39;).textContent = currentUser.role.toUpperCase();
+      $(&#39;navRole&#39;).className = &#39;role-badge role-&#39; + currentUser.role;
+      $(&#39;userAvatar&#39;).textContent = currentUser.username.charAt(0).toUpperCase();
+
+      // Ajustement des menus latéraux
+      $(&#39;menuUsers&#39;).classList.toggle(&#39;hide&#39;, currentUser.role !== &#39;admin&#39;);
+      $(&#39;menuAudit&#39;).classList.toggle(&#39;hide&#39;, currentUser.role !== &#39;admin&#39;);
+      $(&#39;menuNewTicket&#39;).classList.toggle(&#39;hide&#39;, currentUser.role === &#39;admin&#39;);
+
+      // Chargement initial
+      loadDashboardStats();
+      loadTickets();
+      pollNotifications();
+      if (!notifIntervalId) {
+        notifIntervalId = setInterval(pollNotifications, 10000);
+      }
+    }
+
+    function setupGuestUI() {
+      $(&#39;publicView&#39;).classList.remove(&#39;hide&#39;);
+      $(&#39;appView&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;guestNav&#39;).classList.remove(&#39;hide&#39;);
+      $(&#39;userNav&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;notifWrapper&#39;).classList.add(&#39;hide&#39;);
+    }
+
+    function navigateHome() {
+      if (authToken) {
+        switchView(&#39;dashboard&#39;);
+      } else {
+        setupGuestUI();
+      }
+    }
+
+    // Navigation entre les vues de l&#39;espace connecté
+    function switchView(viewName) {
+      $(&#39;dashSection&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;ticketsSection&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;detailSection&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;usersSection&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;auditSection&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;notifsViewSection&#39;).classList.add(&#39;hide&#39;);
+
+      document.querySelectorAll(&#39;.sidebar-btn&#39;).forEach(btn =&gt; btn.classList.remove(&#39;active&#39;));
+
+      if (viewName === &#39;dashboard&#39;) {
+        $(&#39;dashSection&#39;).classList.remove(&#39;hide&#39;);
+        $(&#39;sideBtnDash&#39;).classList.add(&#39;active&#39;);
+        loadDashboardStats();
+        loadTickets();
+      } else if (viewName === &#39;tickets&#39;) {
+        $(&#39;ticketsSection&#39;).classList.remove(&#39;hide&#39;);
+        $(&#39;sideBtnTickets&#39;).classList.add(&#39;active&#39;);
+        loadTickets();
+      } else if (viewName === &#39;users&#39;) {
+        $(&#39;usersSection&#39;).classList.remove(&#39;hide&#39;);
+        $(&#39;sideBtnUsers&#39;).classList.add(&#39;active&#39;);
+        loadUsers();
+      } else if (viewName === &#39;audit&#39;) {
+        $(&#39;auditSection&#39;).classList.remove(&#39;hide&#39;);
+        $(&#39;sideBtnAudit&#39;).classList.add(&#39;active&#39;);
+        loadAuditLog();
+      } else if (viewName === &#39;notifications&#39;) {
+        $(&#39;notifsViewSection&#39;).classList.remove(&#39;hide&#39;);
+        $(&#39;sideBtnNotifs&#39;).classList.add(&#39;active&#39;);
+        loadAllNotificationsView();
+      }
+    }
+
+    // Statistiques des tableaux de bord
+    async function loadDashboardStats() {
+      const container = $(&#39;statsRow&#39;);
+      container.innerHTML = &#39;&#39;;
+
+      if (currentUser.role === &#39;user&#39;) {
+        const s = await api(&#39;/user/stats&#39;);
+        if (!s) return;
+        $(&#39;dashTitle&#39;).textContent = &#39;Mes incidents personnels&#39;;
+        renderStatCard(&#39;Total de mes tickets&#39;, s.total_tickets, &#39;Déclarés par vous&#39;);
+        renderStatCard(&#39;En attente / Ouverts&#39;, s.open_tickets, &#39;À prendre en charge&#39;);
+        renderStatCard(&#39;En cours de traitement&#39;, s.in_progress_tickets, &#39;Pris par un agent&#39;);
+        renderStatCard(&#39;Résolus / Fermés&#39;, s.closed_tickets, &#39;Incidents clos&#39;);
+      } else if (currentUser.role === &#39;agent&#39;) {
+        const s = await api(&#39;/agent/stats&#39;);
+        if (!s) return;
+        $(&#39;dashTitle&#39;).textContent = &#39;File d\&#39;attente globale des incidents&#39;;
+        renderStatCard(&#39;Tickets sur la plateforme&#39;, s.total_tickets, &#39;Total&#39;);
+        renderStatCard(&#39;Nouveaux / Ouverts&#39;, s.open_tickets, &#39;Nécessite intervention&#39;);
+        renderStatCard(&#39;En cours&#39;, s.in_progress_tickets, &#39;En résolution&#39;);
+        renderStatCard(&#39;Critiques / Haute priorité&#39;, s.urgent_tickets, &#39;Action immédiate&#39;);
+      } else if (currentUser.role === &#39;admin&#39;) {
+        const s = await api(&#39;/admin/stats&#39;);
+        if (!s) return;
+        $(&#39;dashTitle&#39;).textContent = &#39;Vue d\&#39;ensemble de la plateforme&#39;;
+        renderStatCard(&#39;Utilisateurs totaux&#39;, s.users.total_users, `${s.users.active_users} actifs`);
+        renderStatCard(&#39;Tickets déclarés&#39;, s.tickets.total_tickets, `${s.tickets.open_tickets} ouverts`);
+        renderStatCard(&#39;En cours&#39;, s.tickets.in_progress_tickets, &#39;Traitement&#39;);
+        renderStatCard(&#39;Incidents résolus&#39;, s.tickets.closed_tickets, &#39;Clôturés&#39;);
+      }
+    }
+
+    function renderStatCard(title, value, sub) {
+      const card = document.createElement(&#39;div&#39;);
+      card.className = &#39;stat-card&#39;;
+      card.innerHTML = `
+        &lt;span class=&quot;stat-card-title&quot;&gt;${title}&lt;/span&gt;
+        &lt;span class=&quot;stat-card-value&quot;&gt;${value}&lt;/span&gt;
+        &lt;span class=&quot;stat-card-sub&quot;&gt;${sub}&lt;/span&gt;
+      `;
+      $(&#39;statsRow&#39;).appendChild(card);
+    }
+
+    // Gestion des Tickets (Consultation, Filtre, Recherche)
+    async function loadTickets() {
+      const status = $(&#39;filterStatus&#39;) ? $(&#39;filterStatus&#39;).value : &#39;&#39;;
+      const priority = $(&#39;filterPriority&#39;) ? $(&#39;filterPriority&#39;).value : &#39;&#39;;
+      const category = $(&#39;filterCategory&#39;) ? $(&#39;filterCategory&#39;).value : &#39;&#39;;
+      const query = $(&#39;searchInput&#39;) ? $(&#39;searchInput&#39;).value.trim() : &#39;&#39;;
+
+      let url = &#39;/tickets?&#39;;
+      if (status) url += `status=${status}&amp;`;
+      if (priority) url += `priority=${priority}&amp;`;
+      if (category) url += `category=${category}&amp;`;
+
+      if (query) {
+        url = `/search?q=${encodeURIComponent(query)}`;
+      }
+
+      const tickets = await api(url);
+      if (!tickets) return;
+      currentTicketsList = tickets;
+
+      renderTicketsTable(&#39;dashTableBody&#39;, tickets.slice(0, 5));
+      renderTicketsTable(&#39;ticketsTableBody&#39;, tickets);
+    }
+
+    function renderTicketsTable(tbodyId, rows) {
+      const tbody = $(tbodyId);
+      if (!tbody) return;
+      tbody.innerHTML = &#39;&#39;;
+
+      if (rows.length === 0) {
+        tbody.innerHTML = &#39;&lt;tr&gt;&lt;td colspan=&quot;8&quot; style=&quot;text-align:center; padding:24px; color:var(--text-muted);&quot;&gt;Aucun ticket d\&#39;incident trouvé.&lt;/td&gt;&lt;/tr&gt;&#39;;
+        return;
+      }
+
+      rows.forEach(t =&gt; {
+        const tr = document.createElement(&#39;tr&#39;);
+        const statusLabels = { open: &#39;Ouvert&#39;, in_progress: &#39;En cours&#39;, closed: &#39;Fermé&#39; };
+        const priorityClasses = { Critique: &#39;badge-critique&#39;, Haute: &#39;badge-haute&#39;, Moyenne: &#39;badge-moyenne&#39;, Basse: &#39;badge-basse&#39; };
+
+        tr.innerHTML = `
+          &lt;td&gt;&lt;strong&gt;#${t.id}&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;strong&gt;${escapeHtml(t.title)}&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;span class=&quot;badge badge-category&quot;&gt;${escapeHtml(t.category || &#39;Autre&#39;)}&lt;/span&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;span class=&quot;badge ${priorityClasses[t.priority] || &#39;badge-moyenne&#39;}&quot;&gt;${escapeHtml(t.priority || &#39;Moyenne&#39;)}&lt;/span&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;span class=&quot;badge badge-${escapeHtml(t.status)}&quot;&gt;${escapeHtml(statusLabels[t.status] || t.status)}&lt;/span&gt;&lt;/td&gt;
+          &lt;td&gt;${escapeHtml(t.owner_username || t.owner_name || &#39;Utilisateur&#39;)}&lt;/td&gt;
+          &lt;td style=&quot;color:var(--text-muted); font-size:0.8rem;&quot;&gt;${new Date(t.created_at).toLocaleDateString()}&lt;/td&gt;
+          &lt;td&gt;
+            &lt;button class=&quot;btn btn-secondary btn-sm&quot; onclick=&quot;openTicketDetail(${t.id})&quot;&gt;Consulter&lt;/button&gt;
+          &lt;/td&gt;
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function handleSearchKey(e) {
+      if (e.key === &#39;Enter&#39;) {
+        loadTickets();
+      }
+    }
+
+    // Modal Nouveau Ticket
+    function openNewTicketModal() {
+      $(&#39;ticketModal&#39;).classList.remove(&#39;hide&#39;);
+      $(&#39;ticketTitle&#39;).focus();
+    }
+    function closeNewTicketModal() {
+      $(&#39;ticketModal&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;ticketTitle&#39;).value = &#39;&#39;;
+      $(&#39;ticketDescription&#39;).value = &#39;&#39;;
+    }
+    async function submitNewTicket() {
+      const title = $(&#39;ticketTitle&#39;).value.trim();
+      const description = $(&#39;ticketDescription&#39;).value.trim();
+      const category = $(&#39;ticketCategory&#39;).value;
+      const priority = $(&#39;ticketPriority&#39;).value;
+
+      if (!title || !description) {
+        showToast(&#39;Le titre et la description sont obligatoires.&#39;, &#39;warning&#39;);
+        return;
+      }
+
+      const res = await api(&#39;/tickets&#39;, {
+        method: &#39;POST&#39;,
+        body: JSON.stringify({ title, description, category, priority })
+      });
+
+      if (res) {
+        showToast(`Ticket #${res.id} déclaré avec succès !`, &#39;success&#39;);
+        closeNewTicketModal();
+        loadDashboardStats();
+        loadTickets();
+      }
+    }
+
+    // Vue Détail d&#39;un Ticket
+    async function openTicketDetail(id) {
+      currentActiveTicketId = id;
+      await loadTicketDetail(id);
+      $(&#39;dashSection&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;ticketsSection&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;detailSection&#39;).classList.remove(&#39;hide&#39;);
+    }
+
+    function closeTicketDetail() {
+      $(&#39;detailSection&#39;).classList.add(&#39;hide&#39;);
+      switchView(&#39;tickets&#39;);
+    }
+
+    async function loadTicketDetail(id) {
+      const t = await api(&#39;/tickets/&#39; + id);
+      if (!t) return;
+
+      $(&#39;dtId&#39;).textContent = &#39;Ticket #&#39; + t.id;
+      $(&#39;dtTitle&#39;).textContent = t.title;
+      $(&#39;dtDesc&#39;).textContent = t.description;
+      $(&#39;dtOwner&#39;).textContent = `${t.owner_name || t.owner_username} (${t.owner_username})`;
+      $(&#39;dtDate&#39;).textContent = new Date(t.created_at).toLocaleString();
+
+      const statusLabels = { open: &#39;Ouvert&#39;, in_progress: &#39;En cours&#39;, closed: &#39;Fermé&#39; };
+      $(&#39;dtStatus&#39;).innerHTML = `&lt;span class=&quot;badge badge-${escapeHtml(t.status)}&quot;&gt;${escapeHtml(statusLabels[t.status] || t.status)}&lt;/span&gt;`;
+      $(&#39;dtPriority&#39;).innerHTML = `&lt;span class=&quot;badge badge-${escapeHtml(String(t.priority).toLowerCase())}&quot;&gt;${escapeHtml(t.priority)}&lt;/span&gt;`;
+      $(&#39;dtCategory&#39;).innerHTML = `&lt;span class=&quot;badge badge-category&quot;&gt;${escapeHtml(t.category)}&lt;/span&gt;`;
+
+      // Affichage du sélecteur de statut pour l&#39;agent
+      if (currentUser.role === &#39;agent&#39;) {
+        $(&#39;agentStatusBox&#39;).classList.remove(&#39;hide&#39;);
+        $(&#39;agentStatusSelect&#39;).value = t.status;
+      } else {
+        $(&#39;agentStatusBox&#39;).classList.add(&#39;hide&#39;);
+      }
+
+      // Commentaires (Démonstration Faille 2 : XSS)
+      $(&#39;dtCommentCount&#39;).textContent = (t.comments || []).length;
+      const commentsList = $(&#39;dtCommentsList&#39;);
+      commentsList.innerHTML = &#39;&#39;;
+
+      (t.comments || []).forEach(c =&gt; {
+        const li = document.createElement(&#39;li&#39;);
+        li.className = &#39;comment-card&#39;;
+
+        // VULN-002 (XSS stocké) CORRIGÉE (phase 5) : le corps du commentaire est inséré avec
+        // textContent, donc affiché comme du TEXTE et jamais interprété comme du HTML.
+        const role = escapeHtml(c.author_role || &#39;user&#39;);
+        li.innerHTML = `
+          &lt;div class=&quot;comment-header&quot;&gt;
+            &lt;strong&gt;${escapeHtml(c.author_name || c.author)} &lt;span class=&quot;role-badge role-${role}&quot;&gt;${role}&lt;/span&gt;&lt;/strong&gt;
+            &lt;span style=&quot;color:var(--text-light);&quot;&gt;${new Date(c.created_at).toLocaleString()}&lt;/span&gt;
+          &lt;/div&gt;
+        `;
+        const bodyEl = document.createElement(&#39;div&#39;);
+        bodyEl.className = &#39;comment-body&#39;;
+        bodyEl.textContent = c.body;
+        li.appendChild(bodyEl);
+
+        commentsList.appendChild(li);
+      });
+
+      // Historique des changements
+      const timeline = $(&#39;dtHistoryTimeline&#39;);
+      timeline.innerHTML = &#39;&#39;;
+      if (!t.history || t.history.length === 0) {
+        timeline.innerHTML = &#39;&lt;p style=&quot;color:var(--text-muted); font-size:0.85rem;&quot;&gt;Aucun changement d\&#39;état enregistré.&lt;/p&gt;&#39;;
+      } else {
+        t.history.forEach(h =&gt; {
+          const item = document.createElement(&#39;div&#39;);
+          item.className = &#39;timeline-item&#39;;
+          item.innerHTML = `
+            &lt;div class=&quot;timeline-dot&quot;&gt;&lt;/div&gt;
+            &lt;div class=&quot;timeline-content&quot;&gt;
+              &lt;strong&gt;${escapeHtml(h.changed_by_name || h.changed_by_username || &#39;Système&#39;)}&lt;/strong&gt;
+              &lt;span style=&quot;color:var(--text-muted);&quot;&gt; : ${escapeHtml(h.comment || `Passage à ${h.new_status}`)}&lt;/span&gt;
+              &lt;div style=&quot;font-size:0.75rem; color:var(--text-light); margin-top:2px;&quot;&gt;${new Date(h.created_at).toLocaleString()}&lt;/div&gt;
+            &lt;/div&gt;
+          `;
+          timeline.appendChild(item);
+        });
+      }
+    }
+
+    // Agent : Modification de statut
+    async function submitStatusChange() {
+      const status = $(&#39;agentStatusSelect&#39;).value;
+      const comment = $(&#39;agentStatusComment&#39;).value.trim();
+
+      const res = await api(`/tickets/${currentActiveTicketId}/status`, {
+        method: &#39;PATCH&#39;,
+        body: JSON.stringify({ status, comment })
+      });
+
+      if (res &amp;&amp; res.ok) {
+        showToast(`Statut mis à jour : ${status}`, &#39;success&#39;);
+        $(&#39;agentStatusComment&#39;).value = &#39;&#39;;
+        loadTicketDetail(currentActiveTicketId);
+        loadDashboardStats();
+      }
+    }
+
+    // Ajout d&#39;un commentaire
+    async function submitComment() {
+      const text = $(&#39;newCommentText&#39;).value.trim();
+      if (!text) {
+        showToast(&#39;Le commentaire ne peut pas être vide.&#39;, &#39;warning&#39;);
+        return;
+      }
+
+      const res = await api(`/tickets/${currentActiveTicketId}/comments`, {
+        method: &#39;POST&#39;,
+        body: JSON.stringify({ body: text })
+      });
+
+      if (res &amp;&amp; res.ok) {
+        showToast(&#39;Commentaire ajouté.&#39;, &#39;success&#39;);
+        $(&#39;newCommentText&#39;).value = &#39;&#39;;
+        loadTicketDetail(currentActiveTicketId);
+      }
+    }
+
+    // Notifications Persistantes
+    async function pollNotifications() {
+      if (!authToken) return;
+      try {
+        const res = await api(&#39;/notifications&#39;);
+        if (!res) return;
+
+        const countEl = $(&#39;notifCount&#39;);
+        if (res.unread_count &gt; 0) {
+          countEl.textContent = res.unread_count;
+          countEl.classList.remove(&#39;hide&#39;);
+        } else {
+          countEl.classList.add(&#39;hide&#39;);
+        }
+
+        renderNotificationsList(&#39;notifList&#39;, res.notifications);
+      } catch (e) {
+        // Ignorer silencieusement les erreurs de polling
+      }
+    }
+
+    function toggleNotifDropdown() {
+      const d = $(&#39;notifDropdown&#39;);
+      d.classList.toggle(&#39;show&#39;);
+    }
+
+    function renderNotificationsList(containerId, list) {
+      const container = $(containerId);
+      if (!container) return;
+      container.innerHTML = &#39;&#39;;
+
+      if (!list || list.length === 0) {
+        container.innerHTML = &#39;&lt;li class=&quot;notif-empty&quot;&gt;Aucune notification pour le moment.&lt;/li&gt;&#39;;
+        return;
+      }
+
+      list.forEach(n =&gt; {
+        const li = document.createElement(&#39;li&#39;);
+        li.className = &#39;notif-item &#39; + (n.is_read ? &#39;&#39; : &#39;unread&#39;);
+        li.innerHTML = `
+          &lt;div class=&quot;notif-item-title&quot;&gt;${escapeHtml(n.title)}&lt;/div&gt;
+          &lt;div class=&quot;notif-item-msg&quot;&gt;${escapeHtml(n.message)}&lt;/div&gt;
+          &lt;div class=&quot;notif-item-time&quot;&gt;${new Date(n.created_at).toLocaleString()}&lt;/div&gt;
+        `;
+        li.onclick = async () =&gt; {
+          if (!n.is_read) {
+            await api(`/notifications/${n.id}/read`, { method: &#39;PATCH&#39; });
+          }
+          if (n.ticket_id) {
+            $(&#39;notifDropdown&#39;).classList.remove(&#39;show&#39;);
+            openTicketDetail(n.ticket_id);
+          }
+          pollNotifications();
+        };
+        container.appendChild(li);
+      });
+    }
+
+    async function markAllNotificationsRead() {
+      await api(&#39;/notifications/read-all&#39;, { method: &#39;PATCH&#39; });
+      showToast(&#39;Toutes les notifications sont marquées comme lues.&#39;, &#39;info&#39;);
+      pollNotifications();
+    }
+
+    async function loadAllNotificationsView() {
+      const res = await api(&#39;/notifications&#39;);
+      if (res) {
+        renderNotificationsList(&#39;fullNotifList&#39;, res.notifications);
+      }
+    }
+
+    // Administration : Utilisateurs &amp; Audit
+    async function loadUsers() {
+      const users = await api(&#39;/admin/users&#39;);
+      if (!users) return;
+
+      const tbody = $(&#39;usersTableBody&#39;);
+      tbody.innerHTML = &#39;&#39;;
+      users.forEach(u =&gt; {
+        const tr = document.createElement(&#39;tr&#39;);
+        tr.innerHTML = `
+          &lt;td&gt;${u.id}&lt;/td&gt;
+          &lt;td&gt;&lt;strong&gt;${escapeHtml(u.username)}&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;${escapeHtml(u.full_name)}&lt;/td&gt;
+          &lt;td&gt;${escapeHtml(u.email || &#39;-&#39;)}&lt;/td&gt;
+          &lt;td&gt;&lt;span class=&quot;role-badge role-${escapeHtml(u.role)}&quot;&gt;${escapeHtml(String(u.role).toUpperCase())}&lt;/span&gt;&lt;/td&gt;
+          &lt;td&gt;
+            &lt;span class=&quot;badge ${u.is_active ? &#39;badge-closed&#39; : &#39;badge-open&#39;}&quot;&gt;
+              ${u.is_active ? &#39;Actif&#39; : &#39;Désactivé&#39;}
+            &lt;/span&gt;
+          &lt;/td&gt;
+          &lt;td&gt;
+            &lt;button class=&quot;btn btn-secondary btn-sm&quot; onclick=&quot;toggleUserActive(${u.id}, ${!u.is_active})&quot;&gt;
+              ${u.is_active ? &#39;Désactiver&#39; : &#39;Activer&#39;}
+            &lt;/button&gt;
+          &lt;/td&gt;
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function toggleUserActive(userId, newState) {
+      const res = await api(`/admin/users/${userId}`, {
+        method: &#39;PATCH&#39;,
+        body: JSON.stringify({ is_active: newState })
+      });
+      if (res) {
+        showToast(`Compte mis à jour : ${newState ? &#39;Actif&#39; : &#39;Désactivé&#39;}`, &#39;success&#39;);
+        loadUsers();
+      }
+    }
+
+    function openNewUserModal() {
+      $(&#39;userModal&#39;).classList.remove(&#39;hide&#39;);
+      $(&#39;newUsername&#39;).focus();
+    }
+    function closeNewUserModal() {
+      $(&#39;userModal&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;newUsername&#39;).value = &#39;&#39;;
+      $(&#39;newFullName&#39;).value = &#39;&#39;;
+      $(&#39;newEmail&#39;).value = &#39;&#39;;
+    }
+    async function submitNewUser() {
+      const username = $(&#39;newUsername&#39;).value.trim();
+      const full_name = $(&#39;newFullName&#39;).value.trim();
+      const email = $(&#39;newEmail&#39;).value.trim();
+      const role = $(&#39;newRole&#39;).value;
+      const password = $(&#39;newUserPass&#39;).value;
+
+      if (!username || !full_name || !password) {
+        showToast(&#39;Veuillez renseigner tous les champs obligatoires.&#39;, &#39;warning&#39;);
+        return;
+      }
+
+      const res = await api(&#39;/admin/users&#39;, {
+        method: &#39;POST&#39;,
+        body: JSON.stringify({ username, full_name, email, role, password })
+      });
+
+      if (res) {
+        showToast(`Utilisateur ${res.username} créé avec succès !`, &#39;success&#39;);
+        closeNewUserModal();
+        loadUsers();
+      }
+    }
+
+    async function loadAuditLog() {
+      const logs = await api(&#39;/admin/audit&#39;);
+      if (!logs) return;
+
+      const tbody = $(&#39;auditTableBody&#39;);
+      tbody.innerHTML = &#39;&#39;;
+      logs.forEach(l =&gt; {
+        const tr = document.createElement(&#39;tr&#39;);
+        tr.innerHTML = `
+          &lt;td style=&quot;color:var(--text-muted); font-size:0.8rem;&quot;&gt;${new Date(l.created_at).toLocaleString()}&lt;/td&gt;
+          &lt;td&gt;&lt;strong&gt;${escapeHtml(l.username || &#39;Anonyme&#39;)}&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;code&gt;${escapeHtml(l.action)}&lt;/code&gt;&lt;/td&gt;
+          &lt;td style=&quot;font-size:0.85rem;&quot;&gt;${escapeHtml(l.details || &#39;-&#39;)}&lt;/td&gt;
+          &lt;td&gt;&lt;code&gt;${escapeHtml(l.ip || &#39;-&#39;)}&lt;/code&gt;&lt;/td&gt;
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Utilitaires d&#39;échappement et Toast
+    function escapeHtml(str) {
+      if (!str) return &#39;&#39;;
+      return String(str)
+        .replace(/&amp;/g, &#39;&amp;amp;&#39;)
+        .replace(/&lt;/g, &#39;&amp;lt;&#39;)
+        .replace(/&gt;/g, &#39;&amp;gt;&#39;)
+        .replace(/&quot;/g, &#39;&amp;quot;&#39;)
+        .replace(/&#39;/g, &#39;&amp;#039;&#39;);
+    }
+
+    function showToast(message, type = &#39;info&#39;) {
+      const container = $(&#39;toastContainer&#39;);
+      const toast = document.createElement(&#39;div&#39;);
+      toast.className = `toast toast-${type}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() =&gt; {
+        toast.style.opacity = &#39;0&#39;;
+        toast.style.transition = &#39;opacity 0.3s ease&#39;;
+        setTimeout(() =&gt; toast.remove(), 300);
+      }, 4000);
+    }
+  &lt;/script&gt;</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%">
+							<div>No links have been found while there are scripts, which is an indication that this is a modern web application.</div>
+							
+						</td>
+					</tr>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080/robots.txt">http://helpdesk-control-plane:30080/robots.txt</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080/robots.txt</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%">&lt;script&gt;
+    // État global de l&#39;application
+    let authToken = localStorage.getItem(&#39;hd_token&#39;) || &#39;&#39;;
+    let currentUser = JSON.parse(localStorage.getItem(&#39;hd_user&#39;) || &#39;null&#39;);
+    let currentTicketsList = [];
+    let currentActiveTicketId = null;
+    let notifIntervalId = null;
+
+    // Raccourci DOM
+    const $ = (id) =&gt; document.getElementById(id);
+
+    // Initialisation
+    window.addEventListener(&#39;DOMContentLoaded&#39;, async () =&gt; {
+      if (authToken &amp;&amp; currentUser) {
+        setupAuthenticatedUI();
+      } else {
+        setupGuestUI();
+      }
+    });
+
+    // Client API
+    async function api(path, options = {}) {
+      const headers = { &#39;Content-Type&#39;: &#39;application/json&#39;, ...(options.headers || {}) };
+      if (authToken) {
+        headers[&#39;Authorization&#39;] = &#39;Bearer &#39; + authToken;
+      }
+      try {
+        const res = await fetch(&#39;/api&#39; + path, { ...options, headers });
+        const data = await res.json().catch(() =&gt; ({}));
+        if (res.status === 401 &amp;&amp; authToken) {
+          showToast(&#39;Session expirée. Veuillez vous reconnecter.&#39;, &#39;error&#39;);
+          logout();
+          return null;
+        }
+        if (!res.ok) {
+          throw new Error(data.error || &#39;Erreur serveur HTTP &#39; + res.status);
+        }
+        return data;
+      } catch (err) {
+        showToast(err.message, &#39;error&#39;);
+        throw err;
+      }
+    }
+
+    // Authentification
+    function openLoginModal() {
+      $(&#39;loginModal&#39;).classList.remove(&#39;hide&#39;);
+      $(&#39;loginUsername&#39;).focus();
+    }
+    function closeLoginModal() {
+      $(&#39;loginModal&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;loginError&#39;).classList.add(&#39;hide&#39;);
+    }
+    function fillLogin(user) {
+      $(&#39;loginUsername&#39;).value = user;
+      $(&#39;loginPassword&#39;).value = &#39;Passw0rd!&#39;;
+      performLogin();
+    }
+    function togglePasswordVisibility(id) {
+      const input = $(id);
+      input.type = input.type === &#39;password&#39; ? &#39;text&#39; : &#39;password&#39;;
+    }
+
+    async function performLogin() {
+      const u = $(&#39;loginUsername&#39;).value.trim();
+      const p = $(&#39;loginPassword&#39;).value;
+      if (!u || !p) {
+        showLoginError(&#39;Veuillez renseigner un identifiant et un mot de passe.&#39;);
+        return;
+      }
+      try {
+        const res = await fetch(&#39;/api/login&#39;, {
+          method: &#39;POST&#39;,
+          headers: { &#39;Content-Type&#39;: &#39;application/json&#39; },
+          body: JSON.stringify({ username: u, password: p })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          showLoginError(data.error || &#39;Échec de connexion&#39;);
+          return;
+        }
+        authToken = data.token;
+        currentUser = { username: data.username, role: data.role, full_name: data.full_name, email: data.email };
+        localStorage.setItem(&#39;hd_token&#39;, authToken);
+        localStorage.setItem(&#39;hd_user&#39;, JSON.stringify(currentUser));
+        closeLoginModal();
+        showToast(`Bienvenue, ${data.full_name || data.username} !`, &#39;success&#39;);
+        setupAuthenticatedUI();
+      } catch (e) {
+        showLoginError(e.message);
+      }
+    }
+
+    function showLoginError(msg) {
+      const el = $(&#39;loginError&#39;);
+      el.textContent = msg;
+      el.classList.remove(&#39;hide&#39;);
+    }
+
+    function logout() {
+      authToken = &#39;&#39;;
+      currentUser = null;
+      localStorage.removeItem(&#39;hd_token&#39;);
+      localStorage.removeItem(&#39;hd_user&#39;);
+      clearInterval(notifIntervalId);
+      setupGuestUI();
+      showToast(&#39;Vous êtes déconnecté.&#39;, &#39;info&#39;);
+    }
+
+    // Gestion de l&#39;affichage selon le rôle
+    function setupAuthenticatedUI() {
+      $(&#39;publicView&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;appView&#39;).classList.remove(&#39;hide&#39;);
+      $(&#39;guestNav&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;userNav&#39;).classList.remove(&#39;hide&#39;);
+      $(&#39;notifWrapper&#39;).classList.remove(&#39;hide&#39;);
+
+      $(&#39;navUsername&#39;).textContent = currentUser.username;
+      $(&#39;navRole&#39;).textContent = currentUser.role.toUpperCase();
+      $(&#39;navRole&#39;).className = &#39;role-badge role-&#39; + currentUser.role;
+      $(&#39;userAvatar&#39;).textContent = currentUser.username.charAt(0).toUpperCase();
+
+      // Ajustement des menus latéraux
+      $(&#39;menuUsers&#39;).classList.toggle(&#39;hide&#39;, currentUser.role !== &#39;admin&#39;);
+      $(&#39;menuAudit&#39;).classList.toggle(&#39;hide&#39;, currentUser.role !== &#39;admin&#39;);
+      $(&#39;menuNewTicket&#39;).classList.toggle(&#39;hide&#39;, currentUser.role === &#39;admin&#39;);
+
+      // Chargement initial
+      loadDashboardStats();
+      loadTickets();
+      pollNotifications();
+      if (!notifIntervalId) {
+        notifIntervalId = setInterval(pollNotifications, 10000);
+      }
+    }
+
+    function setupGuestUI() {
+      $(&#39;publicView&#39;).classList.remove(&#39;hide&#39;);
+      $(&#39;appView&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;guestNav&#39;).classList.remove(&#39;hide&#39;);
+      $(&#39;userNav&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;notifWrapper&#39;).classList.add(&#39;hide&#39;);
+    }
+
+    function navigateHome() {
+      if (authToken) {
+        switchView(&#39;dashboard&#39;);
+      } else {
+        setupGuestUI();
+      }
+    }
+
+    // Navigation entre les vues de l&#39;espace connecté
+    function switchView(viewName) {
+      $(&#39;dashSection&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;ticketsSection&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;detailSection&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;usersSection&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;auditSection&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;notifsViewSection&#39;).classList.add(&#39;hide&#39;);
+
+      document.querySelectorAll(&#39;.sidebar-btn&#39;).forEach(btn =&gt; btn.classList.remove(&#39;active&#39;));
+
+      if (viewName === &#39;dashboard&#39;) {
+        $(&#39;dashSection&#39;).classList.remove(&#39;hide&#39;);
+        $(&#39;sideBtnDash&#39;).classList.add(&#39;active&#39;);
+        loadDashboardStats();
+        loadTickets();
+      } else if (viewName === &#39;tickets&#39;) {
+        $(&#39;ticketsSection&#39;).classList.remove(&#39;hide&#39;);
+        $(&#39;sideBtnTickets&#39;).classList.add(&#39;active&#39;);
+        loadTickets();
+      } else if (viewName === &#39;users&#39;) {
+        $(&#39;usersSection&#39;).classList.remove(&#39;hide&#39;);
+        $(&#39;sideBtnUsers&#39;).classList.add(&#39;active&#39;);
+        loadUsers();
+      } else if (viewName === &#39;audit&#39;) {
+        $(&#39;auditSection&#39;).classList.remove(&#39;hide&#39;);
+        $(&#39;sideBtnAudit&#39;).classList.add(&#39;active&#39;);
+        loadAuditLog();
+      } else if (viewName === &#39;notifications&#39;) {
+        $(&#39;notifsViewSection&#39;).classList.remove(&#39;hide&#39;);
+        $(&#39;sideBtnNotifs&#39;).classList.add(&#39;active&#39;);
+        loadAllNotificationsView();
+      }
+    }
+
+    // Statistiques des tableaux de bord
+    async function loadDashboardStats() {
+      const container = $(&#39;statsRow&#39;);
+      container.innerHTML = &#39;&#39;;
+
+      if (currentUser.role === &#39;user&#39;) {
+        const s = await api(&#39;/user/stats&#39;);
+        if (!s) return;
+        $(&#39;dashTitle&#39;).textContent = &#39;Mes incidents personnels&#39;;
+        renderStatCard(&#39;Total de mes tickets&#39;, s.total_tickets, &#39;Déclarés par vous&#39;);
+        renderStatCard(&#39;En attente / Ouverts&#39;, s.open_tickets, &#39;À prendre en charge&#39;);
+        renderStatCard(&#39;En cours de traitement&#39;, s.in_progress_tickets, &#39;Pris par un agent&#39;);
+        renderStatCard(&#39;Résolus / Fermés&#39;, s.closed_tickets, &#39;Incidents clos&#39;);
+      } else if (currentUser.role === &#39;agent&#39;) {
+        const s = await api(&#39;/agent/stats&#39;);
+        if (!s) return;
+        $(&#39;dashTitle&#39;).textContent = &#39;File d\&#39;attente globale des incidents&#39;;
+        renderStatCard(&#39;Tickets sur la plateforme&#39;, s.total_tickets, &#39;Total&#39;);
+        renderStatCard(&#39;Nouveaux / Ouverts&#39;, s.open_tickets, &#39;Nécessite intervention&#39;);
+        renderStatCard(&#39;En cours&#39;, s.in_progress_tickets, &#39;En résolution&#39;);
+        renderStatCard(&#39;Critiques / Haute priorité&#39;, s.urgent_tickets, &#39;Action immédiate&#39;);
+      } else if (currentUser.role === &#39;admin&#39;) {
+        const s = await api(&#39;/admin/stats&#39;);
+        if (!s) return;
+        $(&#39;dashTitle&#39;).textContent = &#39;Vue d\&#39;ensemble de la plateforme&#39;;
+        renderStatCard(&#39;Utilisateurs totaux&#39;, s.users.total_users, `${s.users.active_users} actifs`);
+        renderStatCard(&#39;Tickets déclarés&#39;, s.tickets.total_tickets, `${s.tickets.open_tickets} ouverts`);
+        renderStatCard(&#39;En cours&#39;, s.tickets.in_progress_tickets, &#39;Traitement&#39;);
+        renderStatCard(&#39;Incidents résolus&#39;, s.tickets.closed_tickets, &#39;Clôturés&#39;);
+      }
+    }
+
+    function renderStatCard(title, value, sub) {
+      const card = document.createElement(&#39;div&#39;);
+      card.className = &#39;stat-card&#39;;
+      card.innerHTML = `
+        &lt;span class=&quot;stat-card-title&quot;&gt;${title}&lt;/span&gt;
+        &lt;span class=&quot;stat-card-value&quot;&gt;${value}&lt;/span&gt;
+        &lt;span class=&quot;stat-card-sub&quot;&gt;${sub}&lt;/span&gt;
+      `;
+      $(&#39;statsRow&#39;).appendChild(card);
+    }
+
+    // Gestion des Tickets (Consultation, Filtre, Recherche)
+    async function loadTickets() {
+      const status = $(&#39;filterStatus&#39;) ? $(&#39;filterStatus&#39;).value : &#39;&#39;;
+      const priority = $(&#39;filterPriority&#39;) ? $(&#39;filterPriority&#39;).value : &#39;&#39;;
+      const category = $(&#39;filterCategory&#39;) ? $(&#39;filterCategory&#39;).value : &#39;&#39;;
+      const query = $(&#39;searchInput&#39;) ? $(&#39;searchInput&#39;).value.trim() : &#39;&#39;;
+
+      let url = &#39;/tickets?&#39;;
+      if (status) url += `status=${status}&amp;`;
+      if (priority) url += `priority=${priority}&amp;`;
+      if (category) url += `category=${category}&amp;`;
+
+      if (query) {
+        url = `/search?q=${encodeURIComponent(query)}`;
+      }
+
+      const tickets = await api(url);
+      if (!tickets) return;
+      currentTicketsList = tickets;
+
+      renderTicketsTable(&#39;dashTableBody&#39;, tickets.slice(0, 5));
+      renderTicketsTable(&#39;ticketsTableBody&#39;, tickets);
+    }
+
+    function renderTicketsTable(tbodyId, rows) {
+      const tbody = $(tbodyId);
+      if (!tbody) return;
+      tbody.innerHTML = &#39;&#39;;
+
+      if (rows.length === 0) {
+        tbody.innerHTML = &#39;&lt;tr&gt;&lt;td colspan=&quot;8&quot; style=&quot;text-align:center; padding:24px; color:var(--text-muted);&quot;&gt;Aucun ticket d\&#39;incident trouvé.&lt;/td&gt;&lt;/tr&gt;&#39;;
+        return;
+      }
+
+      rows.forEach(t =&gt; {
+        const tr = document.createElement(&#39;tr&#39;);
+        const statusLabels = { open: &#39;Ouvert&#39;, in_progress: &#39;En cours&#39;, closed: &#39;Fermé&#39; };
+        const priorityClasses = { Critique: &#39;badge-critique&#39;, Haute: &#39;badge-haute&#39;, Moyenne: &#39;badge-moyenne&#39;, Basse: &#39;badge-basse&#39; };
+
+        tr.innerHTML = `
+          &lt;td&gt;&lt;strong&gt;#${t.id}&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;strong&gt;${escapeHtml(t.title)}&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;span class=&quot;badge badge-category&quot;&gt;${escapeHtml(t.category || &#39;Autre&#39;)}&lt;/span&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;span class=&quot;badge ${priorityClasses[t.priority] || &#39;badge-moyenne&#39;}&quot;&gt;${escapeHtml(t.priority || &#39;Moyenne&#39;)}&lt;/span&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;span class=&quot;badge badge-${escapeHtml(t.status)}&quot;&gt;${escapeHtml(statusLabels[t.status] || t.status)}&lt;/span&gt;&lt;/td&gt;
+          &lt;td&gt;${escapeHtml(t.owner_username || t.owner_name || &#39;Utilisateur&#39;)}&lt;/td&gt;
+          &lt;td style=&quot;color:var(--text-muted); font-size:0.8rem;&quot;&gt;${new Date(t.created_at).toLocaleDateString()}&lt;/td&gt;
+          &lt;td&gt;
+            &lt;button class=&quot;btn btn-secondary btn-sm&quot; onclick=&quot;openTicketDetail(${t.id})&quot;&gt;Consulter&lt;/button&gt;
+          &lt;/td&gt;
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function handleSearchKey(e) {
+      if (e.key === &#39;Enter&#39;) {
+        loadTickets();
+      }
+    }
+
+    // Modal Nouveau Ticket
+    function openNewTicketModal() {
+      $(&#39;ticketModal&#39;).classList.remove(&#39;hide&#39;);
+      $(&#39;ticketTitle&#39;).focus();
+    }
+    function closeNewTicketModal() {
+      $(&#39;ticketModal&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;ticketTitle&#39;).value = &#39;&#39;;
+      $(&#39;ticketDescription&#39;).value = &#39;&#39;;
+    }
+    async function submitNewTicket() {
+      const title = $(&#39;ticketTitle&#39;).value.trim();
+      const description = $(&#39;ticketDescription&#39;).value.trim();
+      const category = $(&#39;ticketCategory&#39;).value;
+      const priority = $(&#39;ticketPriority&#39;).value;
+
+      if (!title || !description) {
+        showToast(&#39;Le titre et la description sont obligatoires.&#39;, &#39;warning&#39;);
+        return;
+      }
+
+      const res = await api(&#39;/tickets&#39;, {
+        method: &#39;POST&#39;,
+        body: JSON.stringify({ title, description, category, priority })
+      });
+
+      if (res) {
+        showToast(`Ticket #${res.id} déclaré avec succès !`, &#39;success&#39;);
+        closeNewTicketModal();
+        loadDashboardStats();
+        loadTickets();
+      }
+    }
+
+    // Vue Détail d&#39;un Ticket
+    async function openTicketDetail(id) {
+      currentActiveTicketId = id;
+      await loadTicketDetail(id);
+      $(&#39;dashSection&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;ticketsSection&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;detailSection&#39;).classList.remove(&#39;hide&#39;);
+    }
+
+    function closeTicketDetail() {
+      $(&#39;detailSection&#39;).classList.add(&#39;hide&#39;);
+      switchView(&#39;tickets&#39;);
+    }
+
+    async function loadTicketDetail(id) {
+      const t = await api(&#39;/tickets/&#39; + id);
+      if (!t) return;
+
+      $(&#39;dtId&#39;).textContent = &#39;Ticket #&#39; + t.id;
+      $(&#39;dtTitle&#39;).textContent = t.title;
+      $(&#39;dtDesc&#39;).textContent = t.description;
+      $(&#39;dtOwner&#39;).textContent = `${t.owner_name || t.owner_username} (${t.owner_username})`;
+      $(&#39;dtDate&#39;).textContent = new Date(t.created_at).toLocaleString();
+
+      const statusLabels = { open: &#39;Ouvert&#39;, in_progress: &#39;En cours&#39;, closed: &#39;Fermé&#39; };
+      $(&#39;dtStatus&#39;).innerHTML = `&lt;span class=&quot;badge badge-${escapeHtml(t.status)}&quot;&gt;${escapeHtml(statusLabels[t.status] || t.status)}&lt;/span&gt;`;
+      $(&#39;dtPriority&#39;).innerHTML = `&lt;span class=&quot;badge badge-${escapeHtml(String(t.priority).toLowerCase())}&quot;&gt;${escapeHtml(t.priority)}&lt;/span&gt;`;
+      $(&#39;dtCategory&#39;).innerHTML = `&lt;span class=&quot;badge badge-category&quot;&gt;${escapeHtml(t.category)}&lt;/span&gt;`;
+
+      // Affichage du sélecteur de statut pour l&#39;agent
+      if (currentUser.role === &#39;agent&#39;) {
+        $(&#39;agentStatusBox&#39;).classList.remove(&#39;hide&#39;);
+        $(&#39;agentStatusSelect&#39;).value = t.status;
+      } else {
+        $(&#39;agentStatusBox&#39;).classList.add(&#39;hide&#39;);
+      }
+
+      // Commentaires (Démonstration Faille 2 : XSS)
+      $(&#39;dtCommentCount&#39;).textContent = (t.comments || []).length;
+      const commentsList = $(&#39;dtCommentsList&#39;);
+      commentsList.innerHTML = &#39;&#39;;
+
+      (t.comments || []).forEach(c =&gt; {
+        const li = document.createElement(&#39;li&#39;);
+        li.className = &#39;comment-card&#39;;
+
+        // VULN-002 (XSS stocké) CORRIGÉE (phase 5) : le corps du commentaire est inséré avec
+        // textContent, donc affiché comme du TEXTE et jamais interprété comme du HTML.
+        const role = escapeHtml(c.author_role || &#39;user&#39;);
+        li.innerHTML = `
+          &lt;div class=&quot;comment-header&quot;&gt;
+            &lt;strong&gt;${escapeHtml(c.author_name || c.author)} &lt;span class=&quot;role-badge role-${role}&quot;&gt;${role}&lt;/span&gt;&lt;/strong&gt;
+            &lt;span style=&quot;color:var(--text-light);&quot;&gt;${new Date(c.created_at).toLocaleString()}&lt;/span&gt;
+          &lt;/div&gt;
+        `;
+        const bodyEl = document.createElement(&#39;div&#39;);
+        bodyEl.className = &#39;comment-body&#39;;
+        bodyEl.textContent = c.body;
+        li.appendChild(bodyEl);
+
+        commentsList.appendChild(li);
+      });
+
+      // Historique des changements
+      const timeline = $(&#39;dtHistoryTimeline&#39;);
+      timeline.innerHTML = &#39;&#39;;
+      if (!t.history || t.history.length === 0) {
+        timeline.innerHTML = &#39;&lt;p style=&quot;color:var(--text-muted); font-size:0.85rem;&quot;&gt;Aucun changement d\&#39;état enregistré.&lt;/p&gt;&#39;;
+      } else {
+        t.history.forEach(h =&gt; {
+          const item = document.createElement(&#39;div&#39;);
+          item.className = &#39;timeline-item&#39;;
+          item.innerHTML = `
+            &lt;div class=&quot;timeline-dot&quot;&gt;&lt;/div&gt;
+            &lt;div class=&quot;timeline-content&quot;&gt;
+              &lt;strong&gt;${escapeHtml(h.changed_by_name || h.changed_by_username || &#39;Système&#39;)}&lt;/strong&gt;
+              &lt;span style=&quot;color:var(--text-muted);&quot;&gt; : ${escapeHtml(h.comment || `Passage à ${h.new_status}`)}&lt;/span&gt;
+              &lt;div style=&quot;font-size:0.75rem; color:var(--text-light); margin-top:2px;&quot;&gt;${new Date(h.created_at).toLocaleString()}&lt;/div&gt;
+            &lt;/div&gt;
+          `;
+          timeline.appendChild(item);
+        });
+      }
+    }
+
+    // Agent : Modification de statut
+    async function submitStatusChange() {
+      const status = $(&#39;agentStatusSelect&#39;).value;
+      const comment = $(&#39;agentStatusComment&#39;).value.trim();
+
+      const res = await api(`/tickets/${currentActiveTicketId}/status`, {
+        method: &#39;PATCH&#39;,
+        body: JSON.stringify({ status, comment })
+      });
+
+      if (res &amp;&amp; res.ok) {
+        showToast(`Statut mis à jour : ${status}`, &#39;success&#39;);
+        $(&#39;agentStatusComment&#39;).value = &#39;&#39;;
+        loadTicketDetail(currentActiveTicketId);
+        loadDashboardStats();
+      }
+    }
+
+    // Ajout d&#39;un commentaire
+    async function submitComment() {
+      const text = $(&#39;newCommentText&#39;).value.trim();
+      if (!text) {
+        showToast(&#39;Le commentaire ne peut pas être vide.&#39;, &#39;warning&#39;);
+        return;
+      }
+
+      const res = await api(`/tickets/${currentActiveTicketId}/comments`, {
+        method: &#39;POST&#39;,
+        body: JSON.stringify({ body: text })
+      });
+
+      if (res &amp;&amp; res.ok) {
+        showToast(&#39;Commentaire ajouté.&#39;, &#39;success&#39;);
+        $(&#39;newCommentText&#39;).value = &#39;&#39;;
+        loadTicketDetail(currentActiveTicketId);
+      }
+    }
+
+    // Notifications Persistantes
+    async function pollNotifications() {
+      if (!authToken) return;
+      try {
+        const res = await api(&#39;/notifications&#39;);
+        if (!res) return;
+
+        const countEl = $(&#39;notifCount&#39;);
+        if (res.unread_count &gt; 0) {
+          countEl.textContent = res.unread_count;
+          countEl.classList.remove(&#39;hide&#39;);
+        } else {
+          countEl.classList.add(&#39;hide&#39;);
+        }
+
+        renderNotificationsList(&#39;notifList&#39;, res.notifications);
+      } catch (e) {
+        // Ignorer silencieusement les erreurs de polling
+      }
+    }
+
+    function toggleNotifDropdown() {
+      const d = $(&#39;notifDropdown&#39;);
+      d.classList.toggle(&#39;show&#39;);
+    }
+
+    function renderNotificationsList(containerId, list) {
+      const container = $(containerId);
+      if (!container) return;
+      container.innerHTML = &#39;&#39;;
+
+      if (!list || list.length === 0) {
+        container.innerHTML = &#39;&lt;li class=&quot;notif-empty&quot;&gt;Aucune notification pour le moment.&lt;/li&gt;&#39;;
+        return;
+      }
+
+      list.forEach(n =&gt; {
+        const li = document.createElement(&#39;li&#39;);
+        li.className = &#39;notif-item &#39; + (n.is_read ? &#39;&#39; : &#39;unread&#39;);
+        li.innerHTML = `
+          &lt;div class=&quot;notif-item-title&quot;&gt;${escapeHtml(n.title)}&lt;/div&gt;
+          &lt;div class=&quot;notif-item-msg&quot;&gt;${escapeHtml(n.message)}&lt;/div&gt;
+          &lt;div class=&quot;notif-item-time&quot;&gt;${new Date(n.created_at).toLocaleString()}&lt;/div&gt;
+        `;
+        li.onclick = async () =&gt; {
+          if (!n.is_read) {
+            await api(`/notifications/${n.id}/read`, { method: &#39;PATCH&#39; });
+          }
+          if (n.ticket_id) {
+            $(&#39;notifDropdown&#39;).classList.remove(&#39;show&#39;);
+            openTicketDetail(n.ticket_id);
+          }
+          pollNotifications();
+        };
+        container.appendChild(li);
+      });
+    }
+
+    async function markAllNotificationsRead() {
+      await api(&#39;/notifications/read-all&#39;, { method: &#39;PATCH&#39; });
+      showToast(&#39;Toutes les notifications sont marquées comme lues.&#39;, &#39;info&#39;);
+      pollNotifications();
+    }
+
+    async function loadAllNotificationsView() {
+      const res = await api(&#39;/notifications&#39;);
+      if (res) {
+        renderNotificationsList(&#39;fullNotifList&#39;, res.notifications);
+      }
+    }
+
+    // Administration : Utilisateurs &amp; Audit
+    async function loadUsers() {
+      const users = await api(&#39;/admin/users&#39;);
+      if (!users) return;
+
+      const tbody = $(&#39;usersTableBody&#39;);
+      tbody.innerHTML = &#39;&#39;;
+      users.forEach(u =&gt; {
+        const tr = document.createElement(&#39;tr&#39;);
+        tr.innerHTML = `
+          &lt;td&gt;${u.id}&lt;/td&gt;
+          &lt;td&gt;&lt;strong&gt;${escapeHtml(u.username)}&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;${escapeHtml(u.full_name)}&lt;/td&gt;
+          &lt;td&gt;${escapeHtml(u.email || &#39;-&#39;)}&lt;/td&gt;
+          &lt;td&gt;&lt;span class=&quot;role-badge role-${escapeHtml(u.role)}&quot;&gt;${escapeHtml(String(u.role).toUpperCase())}&lt;/span&gt;&lt;/td&gt;
+          &lt;td&gt;
+            &lt;span class=&quot;badge ${u.is_active ? &#39;badge-closed&#39; : &#39;badge-open&#39;}&quot;&gt;
+              ${u.is_active ? &#39;Actif&#39; : &#39;Désactivé&#39;}
+            &lt;/span&gt;
+          &lt;/td&gt;
+          &lt;td&gt;
+            &lt;button class=&quot;btn btn-secondary btn-sm&quot; onclick=&quot;toggleUserActive(${u.id}, ${!u.is_active})&quot;&gt;
+              ${u.is_active ? &#39;Désactiver&#39; : &#39;Activer&#39;}
+            &lt;/button&gt;
+          &lt;/td&gt;
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function toggleUserActive(userId, newState) {
+      const res = await api(`/admin/users/${userId}`, {
+        method: &#39;PATCH&#39;,
+        body: JSON.stringify({ is_active: newState })
+      });
+      if (res) {
+        showToast(`Compte mis à jour : ${newState ? &#39;Actif&#39; : &#39;Désactivé&#39;}`, &#39;success&#39;);
+        loadUsers();
+      }
+    }
+
+    function openNewUserModal() {
+      $(&#39;userModal&#39;).classList.remove(&#39;hide&#39;);
+      $(&#39;newUsername&#39;).focus();
+    }
+    function closeNewUserModal() {
+      $(&#39;userModal&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;newUsername&#39;).value = &#39;&#39;;
+      $(&#39;newFullName&#39;).value = &#39;&#39;;
+      $(&#39;newEmail&#39;).value = &#39;&#39;;
+    }
+    async function submitNewUser() {
+      const username = $(&#39;newUsername&#39;).value.trim();
+      const full_name = $(&#39;newFullName&#39;).value.trim();
+      const email = $(&#39;newEmail&#39;).value.trim();
+      const role = $(&#39;newRole&#39;).value;
+      const password = $(&#39;newUserPass&#39;).value;
+
+      if (!username || !full_name || !password) {
+        showToast(&#39;Veuillez renseigner tous les champs obligatoires.&#39;, &#39;warning&#39;);
+        return;
+      }
+
+      const res = await api(&#39;/admin/users&#39;, {
+        method: &#39;POST&#39;,
+        body: JSON.stringify({ username, full_name, email, role, password })
+      });
+
+      if (res) {
+        showToast(`Utilisateur ${res.username} créé avec succès !`, &#39;success&#39;);
+        closeNewUserModal();
+        loadUsers();
+      }
+    }
+
+    async function loadAuditLog() {
+      const logs = await api(&#39;/admin/audit&#39;);
+      if (!logs) return;
+
+      const tbody = $(&#39;auditTableBody&#39;);
+      tbody.innerHTML = &#39;&#39;;
+      logs.forEach(l =&gt; {
+        const tr = document.createElement(&#39;tr&#39;);
+        tr.innerHTML = `
+          &lt;td style=&quot;color:var(--text-muted); font-size:0.8rem;&quot;&gt;${new Date(l.created_at).toLocaleString()}&lt;/td&gt;
+          &lt;td&gt;&lt;strong&gt;${escapeHtml(l.username || &#39;Anonyme&#39;)}&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;code&gt;${escapeHtml(l.action)}&lt;/code&gt;&lt;/td&gt;
+          &lt;td style=&quot;font-size:0.85rem;&quot;&gt;${escapeHtml(l.details || &#39;-&#39;)}&lt;/td&gt;
+          &lt;td&gt;&lt;code&gt;${escapeHtml(l.ip || &#39;-&#39;)}&lt;/code&gt;&lt;/td&gt;
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Utilitaires d&#39;échappement et Toast
+    function escapeHtml(str) {
+      if (!str) return &#39;&#39;;
+      return String(str)
+        .replace(/&amp;/g, &#39;&amp;amp;&#39;)
+        .replace(/&lt;/g, &#39;&amp;lt;&#39;)
+        .replace(/&gt;/g, &#39;&amp;gt;&#39;)
+        .replace(/&quot;/g, &#39;&amp;quot;&#39;)
+        .replace(/&#39;/g, &#39;&amp;#039;&#39;);
+    }
+
+    function showToast(message, type = &#39;info&#39;) {
+      const container = $(&#39;toastContainer&#39;);
+      const toast = document.createElement(&#39;div&#39;);
+      toast.className = `toast toast-${type}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() =&gt; {
+        toast.style.opacity = &#39;0&#39;;
+        toast.style.transition = &#39;opacity 0.3s ease&#39;;
+        setTimeout(() =&gt; toast.remove(), 300);
+      }, 4000);
+    }
+  &lt;/script&gt;</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%">
+							<div>No links have been found while there are scripts, which is an indication that this is a modern web application.</div>
+							
+						</td>
+					</tr>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080/sitemap.xml">http://helpdesk-control-plane:30080/sitemap.xml</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080/sitemap.xml</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%">&lt;script&gt;
+    // État global de l&#39;application
+    let authToken = localStorage.getItem(&#39;hd_token&#39;) || &#39;&#39;;
+    let currentUser = JSON.parse(localStorage.getItem(&#39;hd_user&#39;) || &#39;null&#39;);
+    let currentTicketsList = [];
+    let currentActiveTicketId = null;
+    let notifIntervalId = null;
+
+    // Raccourci DOM
+    const $ = (id) =&gt; document.getElementById(id);
+
+    // Initialisation
+    window.addEventListener(&#39;DOMContentLoaded&#39;, async () =&gt; {
+      if (authToken &amp;&amp; currentUser) {
+        setupAuthenticatedUI();
+      } else {
+        setupGuestUI();
+      }
+    });
+
+    // Client API
+    async function api(path, options = {}) {
+      const headers = { &#39;Content-Type&#39;: &#39;application/json&#39;, ...(options.headers || {}) };
+      if (authToken) {
+        headers[&#39;Authorization&#39;] = &#39;Bearer &#39; + authToken;
+      }
+      try {
+        const res = await fetch(&#39;/api&#39; + path, { ...options, headers });
+        const data = await res.json().catch(() =&gt; ({}));
+        if (res.status === 401 &amp;&amp; authToken) {
+          showToast(&#39;Session expirée. Veuillez vous reconnecter.&#39;, &#39;error&#39;);
+          logout();
+          return null;
+        }
+        if (!res.ok) {
+          throw new Error(data.error || &#39;Erreur serveur HTTP &#39; + res.status);
+        }
+        return data;
+      } catch (err) {
+        showToast(err.message, &#39;error&#39;);
+        throw err;
+      }
+    }
+
+    // Authentification
+    function openLoginModal() {
+      $(&#39;loginModal&#39;).classList.remove(&#39;hide&#39;);
+      $(&#39;loginUsername&#39;).focus();
+    }
+    function closeLoginModal() {
+      $(&#39;loginModal&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;loginError&#39;).classList.add(&#39;hide&#39;);
+    }
+    function fillLogin(user) {
+      $(&#39;loginUsername&#39;).value = user;
+      $(&#39;loginPassword&#39;).value = &#39;Passw0rd!&#39;;
+      performLogin();
+    }
+    function togglePasswordVisibility(id) {
+      const input = $(id);
+      input.type = input.type === &#39;password&#39; ? &#39;text&#39; : &#39;password&#39;;
+    }
+
+    async function performLogin() {
+      const u = $(&#39;loginUsername&#39;).value.trim();
+      const p = $(&#39;loginPassword&#39;).value;
+      if (!u || !p) {
+        showLoginError(&#39;Veuillez renseigner un identifiant et un mot de passe.&#39;);
+        return;
+      }
+      try {
+        const res = await fetch(&#39;/api/login&#39;, {
+          method: &#39;POST&#39;,
+          headers: { &#39;Content-Type&#39;: &#39;application/json&#39; },
+          body: JSON.stringify({ username: u, password: p })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          showLoginError(data.error || &#39;Échec de connexion&#39;);
+          return;
+        }
+        authToken = data.token;
+        currentUser = { username: data.username, role: data.role, full_name: data.full_name, email: data.email };
+        localStorage.setItem(&#39;hd_token&#39;, authToken);
+        localStorage.setItem(&#39;hd_user&#39;, JSON.stringify(currentUser));
+        closeLoginModal();
+        showToast(`Bienvenue, ${data.full_name || data.username} !`, &#39;success&#39;);
+        setupAuthenticatedUI();
+      } catch (e) {
+        showLoginError(e.message);
+      }
+    }
+
+    function showLoginError(msg) {
+      const el = $(&#39;loginError&#39;);
+      el.textContent = msg;
+      el.classList.remove(&#39;hide&#39;);
+    }
+
+    function logout() {
+      authToken = &#39;&#39;;
+      currentUser = null;
+      localStorage.removeItem(&#39;hd_token&#39;);
+      localStorage.removeItem(&#39;hd_user&#39;);
+      clearInterval(notifIntervalId);
+      setupGuestUI();
+      showToast(&#39;Vous êtes déconnecté.&#39;, &#39;info&#39;);
+    }
+
+    // Gestion de l&#39;affichage selon le rôle
+    function setupAuthenticatedUI() {
+      $(&#39;publicView&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;appView&#39;).classList.remove(&#39;hide&#39;);
+      $(&#39;guestNav&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;userNav&#39;).classList.remove(&#39;hide&#39;);
+      $(&#39;notifWrapper&#39;).classList.remove(&#39;hide&#39;);
+
+      $(&#39;navUsername&#39;).textContent = currentUser.username;
+      $(&#39;navRole&#39;).textContent = currentUser.role.toUpperCase();
+      $(&#39;navRole&#39;).className = &#39;role-badge role-&#39; + currentUser.role;
+      $(&#39;userAvatar&#39;).textContent = currentUser.username.charAt(0).toUpperCase();
+
+      // Ajustement des menus latéraux
+      $(&#39;menuUsers&#39;).classList.toggle(&#39;hide&#39;, currentUser.role !== &#39;admin&#39;);
+      $(&#39;menuAudit&#39;).classList.toggle(&#39;hide&#39;, currentUser.role !== &#39;admin&#39;);
+      $(&#39;menuNewTicket&#39;).classList.toggle(&#39;hide&#39;, currentUser.role === &#39;admin&#39;);
+
+      // Chargement initial
+      loadDashboardStats();
+      loadTickets();
+      pollNotifications();
+      if (!notifIntervalId) {
+        notifIntervalId = setInterval(pollNotifications, 10000);
+      }
+    }
+
+    function setupGuestUI() {
+      $(&#39;publicView&#39;).classList.remove(&#39;hide&#39;);
+      $(&#39;appView&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;guestNav&#39;).classList.remove(&#39;hide&#39;);
+      $(&#39;userNav&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;notifWrapper&#39;).classList.add(&#39;hide&#39;);
+    }
+
+    function navigateHome() {
+      if (authToken) {
+        switchView(&#39;dashboard&#39;);
+      } else {
+        setupGuestUI();
+      }
+    }
+
+    // Navigation entre les vues de l&#39;espace connecté
+    function switchView(viewName) {
+      $(&#39;dashSection&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;ticketsSection&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;detailSection&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;usersSection&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;auditSection&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;notifsViewSection&#39;).classList.add(&#39;hide&#39;);
+
+      document.querySelectorAll(&#39;.sidebar-btn&#39;).forEach(btn =&gt; btn.classList.remove(&#39;active&#39;));
+
+      if (viewName === &#39;dashboard&#39;) {
+        $(&#39;dashSection&#39;).classList.remove(&#39;hide&#39;);
+        $(&#39;sideBtnDash&#39;).classList.add(&#39;active&#39;);
+        loadDashboardStats();
+        loadTickets();
+      } else if (viewName === &#39;tickets&#39;) {
+        $(&#39;ticketsSection&#39;).classList.remove(&#39;hide&#39;);
+        $(&#39;sideBtnTickets&#39;).classList.add(&#39;active&#39;);
+        loadTickets();
+      } else if (viewName === &#39;users&#39;) {
+        $(&#39;usersSection&#39;).classList.remove(&#39;hide&#39;);
+        $(&#39;sideBtnUsers&#39;).classList.add(&#39;active&#39;);
+        loadUsers();
+      } else if (viewName === &#39;audit&#39;) {
+        $(&#39;auditSection&#39;).classList.remove(&#39;hide&#39;);
+        $(&#39;sideBtnAudit&#39;).classList.add(&#39;active&#39;);
+        loadAuditLog();
+      } else if (viewName === &#39;notifications&#39;) {
+        $(&#39;notifsViewSection&#39;).classList.remove(&#39;hide&#39;);
+        $(&#39;sideBtnNotifs&#39;).classList.add(&#39;active&#39;);
+        loadAllNotificationsView();
+      }
+    }
+
+    // Statistiques des tableaux de bord
+    async function loadDashboardStats() {
+      const container = $(&#39;statsRow&#39;);
+      container.innerHTML = &#39;&#39;;
+
+      if (currentUser.role === &#39;user&#39;) {
+        const s = await api(&#39;/user/stats&#39;);
+        if (!s) return;
+        $(&#39;dashTitle&#39;).textContent = &#39;Mes incidents personnels&#39;;
+        renderStatCard(&#39;Total de mes tickets&#39;, s.total_tickets, &#39;Déclarés par vous&#39;);
+        renderStatCard(&#39;En attente / Ouverts&#39;, s.open_tickets, &#39;À prendre en charge&#39;);
+        renderStatCard(&#39;En cours de traitement&#39;, s.in_progress_tickets, &#39;Pris par un agent&#39;);
+        renderStatCard(&#39;Résolus / Fermés&#39;, s.closed_tickets, &#39;Incidents clos&#39;);
+      } else if (currentUser.role === &#39;agent&#39;) {
+        const s = await api(&#39;/agent/stats&#39;);
+        if (!s) return;
+        $(&#39;dashTitle&#39;).textContent = &#39;File d\&#39;attente globale des incidents&#39;;
+        renderStatCard(&#39;Tickets sur la plateforme&#39;, s.total_tickets, &#39;Total&#39;);
+        renderStatCard(&#39;Nouveaux / Ouverts&#39;, s.open_tickets, &#39;Nécessite intervention&#39;);
+        renderStatCard(&#39;En cours&#39;, s.in_progress_tickets, &#39;En résolution&#39;);
+        renderStatCard(&#39;Critiques / Haute priorité&#39;, s.urgent_tickets, &#39;Action immédiate&#39;);
+      } else if (currentUser.role === &#39;admin&#39;) {
+        const s = await api(&#39;/admin/stats&#39;);
+        if (!s) return;
+        $(&#39;dashTitle&#39;).textContent = &#39;Vue d\&#39;ensemble de la plateforme&#39;;
+        renderStatCard(&#39;Utilisateurs totaux&#39;, s.users.total_users, `${s.users.active_users} actifs`);
+        renderStatCard(&#39;Tickets déclarés&#39;, s.tickets.total_tickets, `${s.tickets.open_tickets} ouverts`);
+        renderStatCard(&#39;En cours&#39;, s.tickets.in_progress_tickets, &#39;Traitement&#39;);
+        renderStatCard(&#39;Incidents résolus&#39;, s.tickets.closed_tickets, &#39;Clôturés&#39;);
+      }
+    }
+
+    function renderStatCard(title, value, sub) {
+      const card = document.createElement(&#39;div&#39;);
+      card.className = &#39;stat-card&#39;;
+      card.innerHTML = `
+        &lt;span class=&quot;stat-card-title&quot;&gt;${title}&lt;/span&gt;
+        &lt;span class=&quot;stat-card-value&quot;&gt;${value}&lt;/span&gt;
+        &lt;span class=&quot;stat-card-sub&quot;&gt;${sub}&lt;/span&gt;
+      `;
+      $(&#39;statsRow&#39;).appendChild(card);
+    }
+
+    // Gestion des Tickets (Consultation, Filtre, Recherche)
+    async function loadTickets() {
+      const status = $(&#39;filterStatus&#39;) ? $(&#39;filterStatus&#39;).value : &#39;&#39;;
+      const priority = $(&#39;filterPriority&#39;) ? $(&#39;filterPriority&#39;).value : &#39;&#39;;
+      const category = $(&#39;filterCategory&#39;) ? $(&#39;filterCategory&#39;).value : &#39;&#39;;
+      const query = $(&#39;searchInput&#39;) ? $(&#39;searchInput&#39;).value.trim() : &#39;&#39;;
+
+      let url = &#39;/tickets?&#39;;
+      if (status) url += `status=${status}&amp;`;
+      if (priority) url += `priority=${priority}&amp;`;
+      if (category) url += `category=${category}&amp;`;
+
+      if (query) {
+        url = `/search?q=${encodeURIComponent(query)}`;
+      }
+
+      const tickets = await api(url);
+      if (!tickets) return;
+      currentTicketsList = tickets;
+
+      renderTicketsTable(&#39;dashTableBody&#39;, tickets.slice(0, 5));
+      renderTicketsTable(&#39;ticketsTableBody&#39;, tickets);
+    }
+
+    function renderTicketsTable(tbodyId, rows) {
+      const tbody = $(tbodyId);
+      if (!tbody) return;
+      tbody.innerHTML = &#39;&#39;;
+
+      if (rows.length === 0) {
+        tbody.innerHTML = &#39;&lt;tr&gt;&lt;td colspan=&quot;8&quot; style=&quot;text-align:center; padding:24px; color:var(--text-muted);&quot;&gt;Aucun ticket d\&#39;incident trouvé.&lt;/td&gt;&lt;/tr&gt;&#39;;
+        return;
+      }
+
+      rows.forEach(t =&gt; {
+        const tr = document.createElement(&#39;tr&#39;);
+        const statusLabels = { open: &#39;Ouvert&#39;, in_progress: &#39;En cours&#39;, closed: &#39;Fermé&#39; };
+        const priorityClasses = { Critique: &#39;badge-critique&#39;, Haute: &#39;badge-haute&#39;, Moyenne: &#39;badge-moyenne&#39;, Basse: &#39;badge-basse&#39; };
+
+        tr.innerHTML = `
+          &lt;td&gt;&lt;strong&gt;#${t.id}&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;strong&gt;${escapeHtml(t.title)}&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;span class=&quot;badge badge-category&quot;&gt;${escapeHtml(t.category || &#39;Autre&#39;)}&lt;/span&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;span class=&quot;badge ${priorityClasses[t.priority] || &#39;badge-moyenne&#39;}&quot;&gt;${escapeHtml(t.priority || &#39;Moyenne&#39;)}&lt;/span&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;span class=&quot;badge badge-${escapeHtml(t.status)}&quot;&gt;${escapeHtml(statusLabels[t.status] || t.status)}&lt;/span&gt;&lt;/td&gt;
+          &lt;td&gt;${escapeHtml(t.owner_username || t.owner_name || &#39;Utilisateur&#39;)}&lt;/td&gt;
+          &lt;td style=&quot;color:var(--text-muted); font-size:0.8rem;&quot;&gt;${new Date(t.created_at).toLocaleDateString()}&lt;/td&gt;
+          &lt;td&gt;
+            &lt;button class=&quot;btn btn-secondary btn-sm&quot; onclick=&quot;openTicketDetail(${t.id})&quot;&gt;Consulter&lt;/button&gt;
+          &lt;/td&gt;
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function handleSearchKey(e) {
+      if (e.key === &#39;Enter&#39;) {
+        loadTickets();
+      }
+    }
+
+    // Modal Nouveau Ticket
+    function openNewTicketModal() {
+      $(&#39;ticketModal&#39;).classList.remove(&#39;hide&#39;);
+      $(&#39;ticketTitle&#39;).focus();
+    }
+    function closeNewTicketModal() {
+      $(&#39;ticketModal&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;ticketTitle&#39;).value = &#39;&#39;;
+      $(&#39;ticketDescription&#39;).value = &#39;&#39;;
+    }
+    async function submitNewTicket() {
+      const title = $(&#39;ticketTitle&#39;).value.trim();
+      const description = $(&#39;ticketDescription&#39;).value.trim();
+      const category = $(&#39;ticketCategory&#39;).value;
+      const priority = $(&#39;ticketPriority&#39;).value;
+
+      if (!title || !description) {
+        showToast(&#39;Le titre et la description sont obligatoires.&#39;, &#39;warning&#39;);
+        return;
+      }
+
+      const res = await api(&#39;/tickets&#39;, {
+        method: &#39;POST&#39;,
+        body: JSON.stringify({ title, description, category, priority })
+      });
+
+      if (res) {
+        showToast(`Ticket #${res.id} déclaré avec succès !`, &#39;success&#39;);
+        closeNewTicketModal();
+        loadDashboardStats();
+        loadTickets();
+      }
+    }
+
+    // Vue Détail d&#39;un Ticket
+    async function openTicketDetail(id) {
+      currentActiveTicketId = id;
+      await loadTicketDetail(id);
+      $(&#39;dashSection&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;ticketsSection&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;detailSection&#39;).classList.remove(&#39;hide&#39;);
+    }
+
+    function closeTicketDetail() {
+      $(&#39;detailSection&#39;).classList.add(&#39;hide&#39;);
+      switchView(&#39;tickets&#39;);
+    }
+
+    async function loadTicketDetail(id) {
+      const t = await api(&#39;/tickets/&#39; + id);
+      if (!t) return;
+
+      $(&#39;dtId&#39;).textContent = &#39;Ticket #&#39; + t.id;
+      $(&#39;dtTitle&#39;).textContent = t.title;
+      $(&#39;dtDesc&#39;).textContent = t.description;
+      $(&#39;dtOwner&#39;).textContent = `${t.owner_name || t.owner_username} (${t.owner_username})`;
+      $(&#39;dtDate&#39;).textContent = new Date(t.created_at).toLocaleString();
+
+      const statusLabels = { open: &#39;Ouvert&#39;, in_progress: &#39;En cours&#39;, closed: &#39;Fermé&#39; };
+      $(&#39;dtStatus&#39;).innerHTML = `&lt;span class=&quot;badge badge-${escapeHtml(t.status)}&quot;&gt;${escapeHtml(statusLabels[t.status] || t.status)}&lt;/span&gt;`;
+      $(&#39;dtPriority&#39;).innerHTML = `&lt;span class=&quot;badge badge-${escapeHtml(String(t.priority).toLowerCase())}&quot;&gt;${escapeHtml(t.priority)}&lt;/span&gt;`;
+      $(&#39;dtCategory&#39;).innerHTML = `&lt;span class=&quot;badge badge-category&quot;&gt;${escapeHtml(t.category)}&lt;/span&gt;`;
+
+      // Affichage du sélecteur de statut pour l&#39;agent
+      if (currentUser.role === &#39;agent&#39;) {
+        $(&#39;agentStatusBox&#39;).classList.remove(&#39;hide&#39;);
+        $(&#39;agentStatusSelect&#39;).value = t.status;
+      } else {
+        $(&#39;agentStatusBox&#39;).classList.add(&#39;hide&#39;);
+      }
+
+      // Commentaires (Démonstration Faille 2 : XSS)
+      $(&#39;dtCommentCount&#39;).textContent = (t.comments || []).length;
+      const commentsList = $(&#39;dtCommentsList&#39;);
+      commentsList.innerHTML = &#39;&#39;;
+
+      (t.comments || []).forEach(c =&gt; {
+        const li = document.createElement(&#39;li&#39;);
+        li.className = &#39;comment-card&#39;;
+
+        // VULN-002 (XSS stocké) CORRIGÉE (phase 5) : le corps du commentaire est inséré avec
+        // textContent, donc affiché comme du TEXTE et jamais interprété comme du HTML.
+        const role = escapeHtml(c.author_role || &#39;user&#39;);
+        li.innerHTML = `
+          &lt;div class=&quot;comment-header&quot;&gt;
+            &lt;strong&gt;${escapeHtml(c.author_name || c.author)} &lt;span class=&quot;role-badge role-${role}&quot;&gt;${role}&lt;/span&gt;&lt;/strong&gt;
+            &lt;span style=&quot;color:var(--text-light);&quot;&gt;${new Date(c.created_at).toLocaleString()}&lt;/span&gt;
+          &lt;/div&gt;
+        `;
+        const bodyEl = document.createElement(&#39;div&#39;);
+        bodyEl.className = &#39;comment-body&#39;;
+        bodyEl.textContent = c.body;
+        li.appendChild(bodyEl);
+
+        commentsList.appendChild(li);
+      });
+
+      // Historique des changements
+      const timeline = $(&#39;dtHistoryTimeline&#39;);
+      timeline.innerHTML = &#39;&#39;;
+      if (!t.history || t.history.length === 0) {
+        timeline.innerHTML = &#39;&lt;p style=&quot;color:var(--text-muted); font-size:0.85rem;&quot;&gt;Aucun changement d\&#39;état enregistré.&lt;/p&gt;&#39;;
+      } else {
+        t.history.forEach(h =&gt; {
+          const item = document.createElement(&#39;div&#39;);
+          item.className = &#39;timeline-item&#39;;
+          item.innerHTML = `
+            &lt;div class=&quot;timeline-dot&quot;&gt;&lt;/div&gt;
+            &lt;div class=&quot;timeline-content&quot;&gt;
+              &lt;strong&gt;${escapeHtml(h.changed_by_name || h.changed_by_username || &#39;Système&#39;)}&lt;/strong&gt;
+              &lt;span style=&quot;color:var(--text-muted);&quot;&gt; : ${escapeHtml(h.comment || `Passage à ${h.new_status}`)}&lt;/span&gt;
+              &lt;div style=&quot;font-size:0.75rem; color:var(--text-light); margin-top:2px;&quot;&gt;${new Date(h.created_at).toLocaleString()}&lt;/div&gt;
+            &lt;/div&gt;
+          `;
+          timeline.appendChild(item);
+        });
+      }
+    }
+
+    // Agent : Modification de statut
+    async function submitStatusChange() {
+      const status = $(&#39;agentStatusSelect&#39;).value;
+      const comment = $(&#39;agentStatusComment&#39;).value.trim();
+
+      const res = await api(`/tickets/${currentActiveTicketId}/status`, {
+        method: &#39;PATCH&#39;,
+        body: JSON.stringify({ status, comment })
+      });
+
+      if (res &amp;&amp; res.ok) {
+        showToast(`Statut mis à jour : ${status}`, &#39;success&#39;);
+        $(&#39;agentStatusComment&#39;).value = &#39;&#39;;
+        loadTicketDetail(currentActiveTicketId);
+        loadDashboardStats();
+      }
+    }
+
+    // Ajout d&#39;un commentaire
+    async function submitComment() {
+      const text = $(&#39;newCommentText&#39;).value.trim();
+      if (!text) {
+        showToast(&#39;Le commentaire ne peut pas être vide.&#39;, &#39;warning&#39;);
+        return;
+      }
+
+      const res = await api(`/tickets/${currentActiveTicketId}/comments`, {
+        method: &#39;POST&#39;,
+        body: JSON.stringify({ body: text })
+      });
+
+      if (res &amp;&amp; res.ok) {
+        showToast(&#39;Commentaire ajouté.&#39;, &#39;success&#39;);
+        $(&#39;newCommentText&#39;).value = &#39;&#39;;
+        loadTicketDetail(currentActiveTicketId);
+      }
+    }
+
+    // Notifications Persistantes
+    async function pollNotifications() {
+      if (!authToken) return;
+      try {
+        const res = await api(&#39;/notifications&#39;);
+        if (!res) return;
+
+        const countEl = $(&#39;notifCount&#39;);
+        if (res.unread_count &gt; 0) {
+          countEl.textContent = res.unread_count;
+          countEl.classList.remove(&#39;hide&#39;);
+        } else {
+          countEl.classList.add(&#39;hide&#39;);
+        }
+
+        renderNotificationsList(&#39;notifList&#39;, res.notifications);
+      } catch (e) {
+        // Ignorer silencieusement les erreurs de polling
+      }
+    }
+
+    function toggleNotifDropdown() {
+      const d = $(&#39;notifDropdown&#39;);
+      d.classList.toggle(&#39;show&#39;);
+    }
+
+    function renderNotificationsList(containerId, list) {
+      const container = $(containerId);
+      if (!container) return;
+      container.innerHTML = &#39;&#39;;
+
+      if (!list || list.length === 0) {
+        container.innerHTML = &#39;&lt;li class=&quot;notif-empty&quot;&gt;Aucune notification pour le moment.&lt;/li&gt;&#39;;
+        return;
+      }
+
+      list.forEach(n =&gt; {
+        const li = document.createElement(&#39;li&#39;);
+        li.className = &#39;notif-item &#39; + (n.is_read ? &#39;&#39; : &#39;unread&#39;);
+        li.innerHTML = `
+          &lt;div class=&quot;notif-item-title&quot;&gt;${escapeHtml(n.title)}&lt;/div&gt;
+          &lt;div class=&quot;notif-item-msg&quot;&gt;${escapeHtml(n.message)}&lt;/div&gt;
+          &lt;div class=&quot;notif-item-time&quot;&gt;${new Date(n.created_at).toLocaleString()}&lt;/div&gt;
+        `;
+        li.onclick = async () =&gt; {
+          if (!n.is_read) {
+            await api(`/notifications/${n.id}/read`, { method: &#39;PATCH&#39; });
+          }
+          if (n.ticket_id) {
+            $(&#39;notifDropdown&#39;).classList.remove(&#39;show&#39;);
+            openTicketDetail(n.ticket_id);
+          }
+          pollNotifications();
+        };
+        container.appendChild(li);
+      });
+    }
+
+    async function markAllNotificationsRead() {
+      await api(&#39;/notifications/read-all&#39;, { method: &#39;PATCH&#39; });
+      showToast(&#39;Toutes les notifications sont marquées comme lues.&#39;, &#39;info&#39;);
+      pollNotifications();
+    }
+
+    async function loadAllNotificationsView() {
+      const res = await api(&#39;/notifications&#39;);
+      if (res) {
+        renderNotificationsList(&#39;fullNotifList&#39;, res.notifications);
+      }
+    }
+
+    // Administration : Utilisateurs &amp; Audit
+    async function loadUsers() {
+      const users = await api(&#39;/admin/users&#39;);
+      if (!users) return;
+
+      const tbody = $(&#39;usersTableBody&#39;);
+      tbody.innerHTML = &#39;&#39;;
+      users.forEach(u =&gt; {
+        const tr = document.createElement(&#39;tr&#39;);
+        tr.innerHTML = `
+          &lt;td&gt;${u.id}&lt;/td&gt;
+          &lt;td&gt;&lt;strong&gt;${escapeHtml(u.username)}&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;${escapeHtml(u.full_name)}&lt;/td&gt;
+          &lt;td&gt;${escapeHtml(u.email || &#39;-&#39;)}&lt;/td&gt;
+          &lt;td&gt;&lt;span class=&quot;role-badge role-${escapeHtml(u.role)}&quot;&gt;${escapeHtml(String(u.role).toUpperCase())}&lt;/span&gt;&lt;/td&gt;
+          &lt;td&gt;
+            &lt;span class=&quot;badge ${u.is_active ? &#39;badge-closed&#39; : &#39;badge-open&#39;}&quot;&gt;
+              ${u.is_active ? &#39;Actif&#39; : &#39;Désactivé&#39;}
+            &lt;/span&gt;
+          &lt;/td&gt;
+          &lt;td&gt;
+            &lt;button class=&quot;btn btn-secondary btn-sm&quot; onclick=&quot;toggleUserActive(${u.id}, ${!u.is_active})&quot;&gt;
+              ${u.is_active ? &#39;Désactiver&#39; : &#39;Activer&#39;}
+            &lt;/button&gt;
+          &lt;/td&gt;
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function toggleUserActive(userId, newState) {
+      const res = await api(`/admin/users/${userId}`, {
+        method: &#39;PATCH&#39;,
+        body: JSON.stringify({ is_active: newState })
+      });
+      if (res) {
+        showToast(`Compte mis à jour : ${newState ? &#39;Actif&#39; : &#39;Désactivé&#39;}`, &#39;success&#39;);
+        loadUsers();
+      }
+    }
+
+    function openNewUserModal() {
+      $(&#39;userModal&#39;).classList.remove(&#39;hide&#39;);
+      $(&#39;newUsername&#39;).focus();
+    }
+    function closeNewUserModal() {
+      $(&#39;userModal&#39;).classList.add(&#39;hide&#39;);
+      $(&#39;newUsername&#39;).value = &#39;&#39;;
+      $(&#39;newFullName&#39;).value = &#39;&#39;;
+      $(&#39;newEmail&#39;).value = &#39;&#39;;
+    }
+    async function submitNewUser() {
+      const username = $(&#39;newUsername&#39;).value.trim();
+      const full_name = $(&#39;newFullName&#39;).value.trim();
+      const email = $(&#39;newEmail&#39;).value.trim();
+      const role = $(&#39;newRole&#39;).value;
+      const password = $(&#39;newUserPass&#39;).value;
+
+      if (!username || !full_name || !password) {
+        showToast(&#39;Veuillez renseigner tous les champs obligatoires.&#39;, &#39;warning&#39;);
+        return;
+      }
+
+      const res = await api(&#39;/admin/users&#39;, {
+        method: &#39;POST&#39;,
+        body: JSON.stringify({ username, full_name, email, role, password })
+      });
+
+      if (res) {
+        showToast(`Utilisateur ${res.username} créé avec succès !`, &#39;success&#39;);
+        closeNewUserModal();
+        loadUsers();
+      }
+    }
+
+    async function loadAuditLog() {
+      const logs = await api(&#39;/admin/audit&#39;);
+      if (!logs) return;
+
+      const tbody = $(&#39;auditTableBody&#39;);
+      tbody.innerHTML = &#39;&#39;;
+      logs.forEach(l =&gt; {
+        const tr = document.createElement(&#39;tr&#39;);
+        tr.innerHTML = `
+          &lt;td style=&quot;color:var(--text-muted); font-size:0.8rem;&quot;&gt;${new Date(l.created_at).toLocaleString()}&lt;/td&gt;
+          &lt;td&gt;&lt;strong&gt;${escapeHtml(l.username || &#39;Anonyme&#39;)}&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;code&gt;${escapeHtml(l.action)}&lt;/code&gt;&lt;/td&gt;
+          &lt;td style=&quot;font-size:0.85rem;&quot;&gt;${escapeHtml(l.details || &#39;-&#39;)}&lt;/td&gt;
+          &lt;td&gt;&lt;code&gt;${escapeHtml(l.ip || &#39;-&#39;)}&lt;/code&gt;&lt;/td&gt;
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Utilitaires d&#39;échappement et Toast
+    function escapeHtml(str) {
+      if (!str) return &#39;&#39;;
+      return String(str)
+        .replace(/&amp;/g, &#39;&amp;amp;&#39;)
+        .replace(/&lt;/g, &#39;&amp;lt;&#39;)
+        .replace(/&gt;/g, &#39;&amp;gt;&#39;)
+        .replace(/&quot;/g, &#39;&amp;quot;&#39;)
+        .replace(/&#39;/g, &#39;&amp;#039;&#39;);
+    }
+
+    function showToast(message, type = &#39;info&#39;) {
+      const container = $(&#39;toastContainer&#39;);
+      const toast = document.createElement(&#39;div&#39;);
+      toast.className = `toast toast-${type}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() =&gt; {
+        toast.style.opacity = &#39;0&#39;;
+        toast.style.transition = &#39;opacity 0.3s ease&#39;;
+        setTimeout(() =&gt; toast.remove(), 300);
+      }, 4000);
+    }
+  &lt;/script&gt;</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%">
+							<div>No links have been found while there are scripts, which is an indication that this is a modern web application.</div>
+							
+						</td>
+					</tr>
+				
+				<tr>
+					<td width="20%">Instances</td>
+					
+					
+					<td width="80%">4</td>
+					
+				</tr>
+				<tr>
+					<td width="20%">Solution</td>
+					<td width="80%">
+							<div>This is an informational alert and so no changes are required.</div>
+							
+						</td>
+				</tr>
+				<tr>
+					<td width="20%">Reference</td>
+					<td width="80%"></td>
+				</tr>
+				<tr>
+					<td width="20%">CWE Id</td>
+					<td width="80%"></td>
+				</tr>
+				<tr>
+					<td width="20%">WASC Id</td>
+					<td width="80%"></td>
+				</tr>
+				<tr>
+					<td width="20%">Plugin Id</td>
+					<td width="80%"><a
+						href="https://www.zaproxy.org/docs/alerts/10109/">10109</a></td>
+				</tr>
+			</table>
+			<div class="spacer"></div>
+		
+			<table class="results">
+				<tr height="24">
+					<th width="20%" class="risk-0"><a
+						id="10049"></a>
+						<div>Informational</div></th>
+					<th class="risk-0">Storable and Cacheable Content</th>
+				</tr>
+				<tr>
+					<td width="20%">Description</td>
+					<td width="80%">
+							<div>The response contents are storable by caching components such as proxy servers, and may be retrieved directly from the cache, rather than from the origin server by the caching servers, in response to similar requests from other users. If the response data is sensitive, personal or user-specific, this may result in sensitive information being leaked. In some cases, this may even result in a user gaining complete control of the session of another user, depending on the configuration of the caching components in use in their environment. This is primarily an issue where &quot;shared&quot; caching servers such as &quot;proxy&quot; caches are configured on the local network. This configuration is typically found in corporate or educational environments, for instance.</div>
+							
+						</td>
+				</tr>
+				<TR vAlign="top">
+					<TD colspan="2"></TD>
+				</TR>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080">http://helpdesk-control-plane:30080</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%">
+							<div>In the absence of an explicitly specified caching lifetime directive in the response, a liberal lifetime heuristic of 1 year was assumed. This is permitted by rfc7234.</div>
+							
+						</td>
+					</tr>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080/health">http://helpdesk-control-plane:30080/health</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080/health</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%">
+							<div>In the absence of an explicitly specified caching lifetime directive in the response, a liberal lifetime heuristic of 1 year was assumed. This is permitted by rfc7234.</div>
+							
+						</td>
+					</tr>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080/robots.txt">http://helpdesk-control-plane:30080/robots.txt</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080/robots.txt</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%">
+							<div>In the absence of an explicitly specified caching lifetime directive in the response, a liberal lifetime heuristic of 1 year was assumed. This is permitted by rfc7234.</div>
+							
+						</td>
+					</tr>
+				
+					<tr>
+						<td width="20%"
+							class="indent1">URL</td>
+						<td width="80%"><a href="http://helpdesk-control-plane:30080/sitemap.xml">http://helpdesk-control-plane:30080/sitemap.xml</a></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Node Name</td>
+						<td width="80%">http://helpdesk-control-plane:30080/sitemap.xml</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Method</td>
+						<td width="80%">GET</td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Parameter</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Attack</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Evidence</td>
+						<td width="80%"></td>
+					</tr>
+					<tr>
+						<td width="20%"
+							class="indent2">Other Info</td>
+						<td width="80%">
+							<div>In the absence of an explicitly specified caching lifetime directive in the response, a liberal lifetime heuristic of 1 year was assumed. This is permitted by rfc7234.</div>
+							
+						</td>
+					</tr>
+				
+				<tr>
+					<td width="20%">Instances</td>
+					
+					
+					<td width="80%">4</td>
+					
+				</tr>
+				<tr>
+					<td width="20%">Solution</td>
+					<td width="80%">
+							<div>Validate that the response does not contain sensitive, personal or user-specific information. If it does, consider the use of the following HTTP response headers, to limit, or prevent the content being stored and retrieved from the cache by another user:</div>
+							<br />
+						
+							<div>Cache-Control: no-cache, no-store, must-revalidate, private</div>
+							<br />
+						
+							<div>Pragma: no-cache</div>
+							<br />
+						
+							<div>Expires: 0</div>
+							<br />
+						
+							<div>This configuration directs both HTTP 1.0 and HTTP 1.1 compliant caching servers to not store the response, and to not retrieve the response (without validation) from the cache, in response to a similar request.</div>
+							
+						</td>
+				</tr>
+				<tr>
+					<td width="20%">Reference</td>
+					<td width="80%">
+							<a href="https://datatracker.ietf.org/doc/html/rfc7234">https://datatracker.ietf.org/doc/html/rfc7234</a>
+							<br />
+						
+							<a href="https://datatracker.ietf.org/doc/html/rfc7231">https://datatracker.ietf.org/doc/html/rfc7231</a>
+							<br />
+						
+							<a href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html">https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html</a>
+							
+						</td>
+				</tr>
+				<tr>
+					<td width="20%">CWE Id</td>
+					<td width="80%"><a
+						href="https://cwe.mitre.org/data/definitions/524.html">524</a></td>
+				</tr>
+				<tr>
+					<td width="20%">WASC Id</td>
+					<td width="80%">13</td>
+				</tr>
+				<tr>
+					<td width="20%">Plugin Id</td>
+					<td width="80%"><a
+						href="https://www.zaproxy.org/docs/alerts/10049/">10049</a></td>
+				</tr>
+			</table>
+			<div class="spacer"></div>
+		
+	
+
+	
+		
+			<h3>Sequence Details</h3>
+			<sup>With the associated active scan results.</sup>
+
+			
+
+			<div class="spacer-lg"></div>
+
+		
+	
+
+</body>
+</html>
+

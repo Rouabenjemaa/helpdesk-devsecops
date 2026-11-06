@@ -84,11 +84,11 @@ powershell -ExecutionPolicy Bypass -File k8s\scripts\verify.ps1
 | 3 | `Read-only file system` | système de fichiers en lecture seule |
 | 4 | `allowPrivilegeEscalation:false`, `capabilities`... | securityContext |
 | 5 | 5 NetworkPolicies listées | isolation réseau configurée |
-| 6 | `DNS=OK` puis `RESULT=BLOQUE` | isolation réseau **réellement appliquée** |
+| 6 | `AUTORISE ET FONCTIONNE` pour frontend vers backend, puis `BLOQUE` pour frontend vers db, backend vers frontend et le pod intrus | isolation réseau **réellement appliquée** (le même outil réussit sur le flux légitime et échoue sur les autres) |
 | 7 | secrets listés, seulement `secretKeyRef` dans Git | aucun secret en clair |
 | 8 | `200`, en-têtes CSP | l'application fonctionne après durcissement |
 
-**Faites une capture de chaque section** et rangez-les dans `docs/preuves/phase6/`. La section 6 est la plus importante : un `RESULT=CONNECTE` signifierait que les règles sont écrites mais ignorées (voir le dépannage).
+**Faites une capture de chaque section** et rangez-les dans `docs/preuves/phase6/`. La section 6 est la plus importante : un flux interdit `JOIGNABLE` signifierait que les règles sont écrites mais ignorées (voir le dépannage). Un `DNS=KO` du pod intrus rend son test inconcluant : seuls comptent alors les trois premiers tests.
 
 ## 6. Dépannage
 
@@ -101,7 +101,8 @@ powershell -ExecutionPolicy Bypass -File k8s\scripts\verify.ps1
 | Pod refusé : `violates PodSecurity` | `kubectl get events -n helpdesk` : il manque un réglage de durcissement dans le manifeste. |
 | `db` en `CrashLoopBackOff` | `kubectl logs deploy/db -n helpdesk`. Si « permission denied » sur le dossier de données : le volume n'a pas les bons droits. Solution de repli : remplacer le volume `data` par `emptyDir: {}` (les données sont alors perdues si le pod redémarre) et le noter dans le rapport. Si une écriture est refusée ailleurs, ajouter un `emptyDir` sur ce dossier. |
 | `backend` en `CrashLoopBackOff` | `kubectl logs deploy/backend -n helpdesk` : `JWT_SECRET manquant` (secret absent) ou base injoignable. |
-| `RESULT=CONNECTE` | Le réseau du cluster n'applique pas les NetworkPolicies. Vérifiez `kind version` (v0.30 ou plus), supprimez le cluster (`kind delete cluster --name helpdesk`), mettez `kind` à jour et recommencez. En dernier recours : cluster sans réseau par défaut (`networking: disableDefaultCNI: true` dans `kind-config.yaml`) et installation de Calico en suivant le guide officiel pour kind, puis `deploy.ps1`. |
+| Flux interdit `JOIGNABLE` | Le réseau du cluster n'applique pas les NetworkPolicies. Vérifiez `kind version` (v0.30 ou plus), supprimez le cluster (`kind delete cluster --name helpdesk`), mettez `kind` à jour et recommencez. En dernier recours : cluster sans réseau par défaut (`networking: disableDefaultCNI: true` dans `kind-config.yaml`) et installation de Calico en suivant le guide officiel pour kind, puis `deploy.ps1`. |
+| `kind load docker-image` échoue (« content digest ... not found ») | Sans conséquence : le cluster télécharge lui-même les images dont il a besoin. L'erreur vient de la façon dont Docker Desktop exporte les images à plusieurs plateformes. |
 | http://localhost:8081 ne répond pas | `kubectl get svc -n helpdesk` ; le cluster a-t-il été créé **avec** `--config k8s\kind-config.yaml` ? |
 
 ## 7. Remise à zéro

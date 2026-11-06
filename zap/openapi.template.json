@@ -1,0 +1,283 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "HelpDesk API (description pour le scan ZAP)",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "__BASE_URL__/api"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Etat du service",
+        "tags": [
+          "api"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "summary": "Connexion",
+        "tags": [
+          "api"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "example": "roua"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "Passw0rd!"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me": {
+      "get": {
+        "summary": "Utilisateur courant",
+        "tags": [
+          "api"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/tickets": {
+      "get": {
+        "summary": "Liste des tickets",
+        "tags": [
+          "api"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creer un ticket",
+        "tags": [
+          "api"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "example": "Test ZAP"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Ticket cree par le scan"
+                  },
+                  "category": {
+                    "type": "string",
+                    "example": "Logiciel"
+                  },
+                  "priority": {
+                    "type": "string",
+                    "example": "Moyenne"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tickets/{id}": {
+      "get": {
+        "summary": "Detail d'un ticket",
+        "tags": [
+          "api"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ]
+      }
+    },
+    "/tickets/{id}/status": {
+      "patch": {
+        "summary": "Changer le statut",
+        "tags": [
+          "api"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "example": "En cours"
+                  },
+                  "comment": {
+                    "type": "string",
+                    "example": "Mise a jour"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tickets/{id}/comments": {
+      "post": {
+        "summary": "Ajouter un commentaire",
+        "tags": [
+          "api"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "body": {
+                    "type": "string",
+                    "example": "Commentaire de test"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search": {
+      "get": {
+        "summary": "Recherche de tickets",
+        "tags": [
+          "api"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "VPN"
+            }
+          }
+        ]
+      }
+    },
+    "/notifications": {
+      "get": {
+        "summary": "Notifications",
+        "tags": [
+          "api"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/user/stats": {
+      "get": {
+        "summary": "Statistiques utilisateur",
+        "tags": [
+          "api"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  }
+}
