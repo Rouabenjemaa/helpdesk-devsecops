@@ -1,0 +1,22 @@
+# Deux espaces de noms, pour isoler le seul composant qui a besoin de droits élevés.
+#
+# monitoring : Prometheus, Loki, Grafana. Pod Security "restricted" (non-root, lecture seule, etc.).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+---
+# log-agent : l'agent qui lit les journaux sur le noeud. Il DOIT monter /var/log/pods (hostPath) et
+# lire des fichiers appartenant à root : c'est incompatible avec "restricted". L'exception est donc
+# limitée à cet espace de noms, qui ne contient que ce pod (lecture seule, aucune capacité Linux).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: log-agent
+  labels:
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/warn: baseline

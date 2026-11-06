@@ -95,7 +95,7 @@ frontend/   index.html, Dockerfile (nginx non privilégié), nginx.conf
 docker-compose.yml   (db + backend + frontend)
 db/         init.sql (schéma + données fictives)
 docs/       architecture-initiale.md, failles.md, trame-rapport.md
-k8s/        vide pour l'instant (phase 6)
+k8s/        cluster kind, manifestes, scripts de déploiement et de vérification (phase 6)
 scripts/    start-db.sh, proofs.sh
 .env.example
 ```

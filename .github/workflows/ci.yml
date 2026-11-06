@@ -62,7 +62,7 @@ jobs:
             sleep 2
           done
           STATUS=0
-          TEST_BASE_URL=http://localhost:3000 npm test || STATUS=$?
+          TEST_BASE_URL=http://localhost:3000 TEST_METRICS_URL=http://localhost:9100 npm test || STATUS=$?
           if [ "$STATUS" -ne 0 ]; then
             echo "--- Journal du serveur (50 dernières lignes) ---"
             tail -n 50 ../server.log
