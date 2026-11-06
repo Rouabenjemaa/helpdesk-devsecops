@@ -1,4 +1,4 @@
-# HelpDesk DevSecOps — Phases 0 à 5
+# HelpDesk DevSecOps — Phases 0 à 8
 
 Projet académique — Module DevSecOps, TEK-UP University (ING-5-SSIR).
 Binôme : **Ben Jemaa Roua** (backend, base de données, failles) · **Dkhil Mohamed Mahdi** (frontend, architecture, rapport).
@@ -66,6 +66,21 @@ Détails, GitHub Secrets, Secret Kubernetes et rotation : `docs/secrets-phase4.m
 Les 4 failles sont corrigées et couvertes par des tests de non-régression (`backend/test/regression.test.js`).
 Détails, limites connues et mise à jour des dépendances : `docs/correctifs-phase5.md`.
 
+## Phase 6 : Kubernetes durci
+
+Cluster `kind`, pods sans root, système de fichiers en lecture seule, secrets hors du dépôt, NetworkPolicies.
+Guide pas à pas : `docs/phase6-kubernetes.md` (manifestes dans `k8s/`, scripts `k8s/scripts/deploy.ps1` et `verify.ps1`).
+
+## Phase 7 : tests dynamiques ZAP
+
+Scans OWASP ZAP avant et après correction, avec tableau de comparaison.
+Guide : `docs/phase7-zap.md` (scripts dans `zap/scripts/`, rapports dans `docs/preuves/phase7/`).
+
+## Phase 8 : observabilité et réponse à incident
+
+Métriques (Prometheus), journaux (Loki, Alloy), tableau de bord (Grafana), alertes, détection d'attaques.
+Guide : `docs/phase8-observabilite.md`. Plan de réponse : `docs/plan-reponse-incident.md`.
+
 ## Comptes de test (données fictives, mot de passe `Passw0rd!`)
 
 | Rôle | Identifiant | Usage |
@@ -95,7 +110,7 @@ frontend/   index.html, Dockerfile (nginx non privilégié), nginx.conf
 docker-compose.yml   (db + backend + frontend)
 db/         init.sql (schéma + données fictives)
 docs/       architecture-initiale.md, failles.md, trame-rapport.md
-k8s/        vide pour l'instant (phase 6)
+k8s/        cluster kind, manifestes, scripts de déploiement et de vérification (phase 6)
 scripts/    start-db.sh, proofs.sh
 .env.example
 ```

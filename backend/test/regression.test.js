@@ -119,3 +119,42 @@ test('VULN-004 : le serveur refuse de démarrer sans JWT_SECRET valide', () => {
     assert.match(r.stderr, /JWT_SECRET/);
   }
 });
+
+// --- Robustesse (issu du scan ZAP) -----------------------------------------
+test('ROBUSTESSE : un identifiant invalide ou géant renvoie 400, jamais 500', integration, async () => {
+  const token = await login('roua');
+  for (const bad of ['abc', '0', '-1', '12abc', '99999999999999999999']) {
+    const r = await api(`/tickets/${bad}`, token);
+    assert.equal(r.status, 400, `/tickets/${bad} devrait renvoyer 400 (reçu ${r.status})`);
+  }
+});
+
+// --- Phase 8 : observabilité ----------------------------------------------------
+const METRICS = process.env.TEST_METRICS_URL;
+const metricsTest = { skip: METRICS ? false : 'TEST_METRICS_URL non défini (port de métriques)' };
+async function readInjectionCounter() {
+  const text = await (await fetch(`${METRICS}/metrics`)).text();
+  const m = text.match(/helpdesk_injection_suspected_total\{route="\/search",type="sqli"\} ([0-9.]+)/);
+  return { text, value: m ? Number(m[1]) : null };
+}
+
+test('PHASE 8 : les métriques ne sont PAS exposées sur le port public', integration, async () => {
+  for (const url of [`${BASE}/metrics`, `${BASE}/api/metrics`]) {
+    const r = await fetch(url);
+    assert.equal(r.status, 404, `${url} ne doit pas exposer de métriques (statut ${r.status})`);
+  }
+});
+
+test('PHASE 8 : une tentative d\'injection SQL est détectée et comptée', metricsTest, async () => {
+  const token = await login('roua');
+  const before = await readInjectionCounter();
+  assert.notEqual(before.value, null, 'le compteur helpdesk_injection_suspected_total est absent');
+  await api(`/search?q=${encodeURIComponent("' OR 1=1 --")}`, token);
+  const after = await readInjectionCounter();
+  assert.ok(after.value >= before.value + 1, `compteur inchangé (${before.value} -> ${after.value})`);
+});
+
+test('PHASE 8 : les métriques ne contiennent ni jeton ni mot de passe', metricsTest, async () => {
+  const { text } = await readInjectionCounter();
+  assert.ok(!/eyJ|Bearer|Passw0rd|password/i.test(text), 'une donnée sensible apparaît dans /metrics');
+});

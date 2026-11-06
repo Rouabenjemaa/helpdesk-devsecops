@@ -1,0 +1,101 @@
+# Isolation réseau : "tout est interdit, on autorise uniquement ce qui est nécessaire".
+#   navigateur -> frontend (8080) -> backend (3000) -> db (5432)
+# Attention : ces règles ne sont appliquées que si le réseau du cluster (CNI) les fait respecter.
+# La preuve est dans k8s/tests/intruder.yaml (voir docs/phase6-kubernetes.md).
+#
+# 1. Tout refuser par défaut, en entrée ET en sortie, pour tous les pods de l'espace de noms.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: helpdesk
+spec:
+  podSelector: {}
+  policyTypes: ["Ingress", "Egress"]
+---
+# 2. Autoriser tous les pods à interroger le DNS du cluster (sans cela, "db" et "backend" ne se résolvent plus).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns-egress
+  namespace: helpdesk
+spec:
+  podSelector: {}
+  policyTypes: ["Egress"]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels: { kubernetes.io/metadata.name: kube-system }
+          podSelector:
+            matchLabels: { k8s-app: kube-dns }
+      ports:
+        - { protocol: UDP, port: 53 }
+        - { protocol: TCP, port: 53 }
+---
+# 3. Frontend : reçoit le trafic web (NodePort), n'a le droit de parler qu'au backend.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: frontend-policy
+  namespace: helpdesk
+spec:
+  podSelector:
+    matchLabels: { app: frontend }
+  policyTypes: ["Ingress", "Egress"]
+  ingress:
+    - ports:
+        - { protocol: TCP, port: 8080 }     # depuis n'importe où : c'est la porte d'entrée publique
+  egress:
+    - to:
+        - podSelector:
+            matchLabels: { app: backend }
+      ports:
+        - { protocol: TCP, port: 3000 }
+---
+# 4. Backend : ne reçoit que du frontend, ne parle qu'à la base.
+#    Phase 8 : Prometheus (espace de noms monitoring) peut lire les métriques sur le port 9100, et seulement lui.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: backend-policy
+  namespace: helpdesk
+spec:
+  podSelector:
+    matchLabels: { app: backend }
+  policyTypes: ["Ingress", "Egress"]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: { app: frontend }
+      ports:
+        - { protocol: TCP, port: 3000 }
+    - from:
+        - namespaceSelector:
+            matchLabels: { kubernetes.io/metadata.name: monitoring }
+          podSelector:
+            matchLabels: { app: prometheus }
+      ports:
+        - { protocol: TCP, port: 9100 }
+  egress:
+    - to:
+        - podSelector:
+            matchLabels: { app: db }
+      ports:
+        - { protocol: TCP, port: 5432 }
+---
+# 5. Base de données : ne reçoit que du backend, n'émet rien (hormis le DNS, règle 2).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: db-policy
+  namespace: helpdesk
+spec:
+  podSelector:
+    matchLabels: { app: db }
+  policyTypes: ["Ingress"]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: { app: backend }
+      ports:
+        - { protocol: TCP, port: 5432 }

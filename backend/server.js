@@ -49,8 +49,18 @@ app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
   next();
 });
+
+// Identifiant numérique valide : entier positif qui tient dans un INTEGER PostgreSQL, sinon null.
+// Évite qu'une valeur absurde (texte, nombre géant) atteigne la base et provoque une erreur 500.
+function parseId(value) {
+  const n = Number(value);
+  return Number.isInteger(n) && n >= 1 && n <= 2147483647 ? n : null;
+}
 
 // Limiteur simple en mémoire (par adresse IP). Suffisant pour une instance unique.
 function rateLimit({ windowMs, max }) {
@@ -108,25 +118,132 @@ const pool = new Pool({
 });
 
 // =============================================================================
-// EN-TÊTES DE SÉCURITÉ & JOURNALISATION STRUCTURÉE (Loki / Observabilité)
+// PHASE 8 : MÉTRIQUES (Prometheus) ET DÉTECTION DE TENTATIVES D'ATTAQUE
+// Les métriques sont servies sur un PORT SÉPARÉ (METRICS_PORT, 9100 par défaut), jamais sur le port
+// public : nginx ne les relaie donc pas (/api/metrics répond 404). Seul Prometheus peut les lire
+// (NetworkPolicy). Aucune dépendance externe : format texte Prometheus écrit à la main.
+// =============================================================================
+const METRIC_DEFS = {
+  helpdesk_http_requests_total: ['counter', 'Nombre de requêtes HTTP traitées'],
+  helpdesk_http_request_duration_seconds: ['summary', 'Durée de traitement des requêtes HTTP'],
+  helpdesk_login_failures_total: ['counter', "Nombre d'échecs de connexion"],
+  helpdesk_injection_suspected_total: ['counter', "Tentatives d'injection (SQL, XSS) détectées dans les saisies"],
+};
+const metricsStart = Date.now();
+const counters = new Map(); // clé : nom{étiquettes}  ->  valeur
+
+function labelsToString(labels) {
+  const parts = Object.keys(labels).sort().map((k) => {
+    const v = String(labels[k]).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n');
+    return `${k}="${v}"`;
+  });
+  return parts.length ? `{${parts.join(',')}}` : '';
+}
+function incMetric(name, labels = {}, value = 1) {
+  const key = name + labelsToString(labels);
+  counters.set(key, (counters.get(key) || 0) + value);
+}
+// Les compteurs sont créés à 0 au démarrage : Prometheus voit alors la première attaque
+// (une série qui apparaît directement à 1 ferait croire que increase() vaut 0).
+for (const [type, route] of [['sqli', '/search'], ['sqli', '/login'], ['sqli', '/tickets'],
+                              ['xss', '/tickets/:id/comments'], ['xss', '/tickets']]) {
+  incMetric('helpdesk_injection_suspected_total', { type, route }, 0);
+}
+incMetric('helpdesk_login_failures_total', {}, 0);
+
+function renderMetrics() {
+  const lines = [];
+  const entries = [...counters.entries()].sort();
+  for (const [base, [type, help]] of Object.entries(METRIC_DEFS)) {
+    lines.push(`# HELP ${base} ${help}`, `# TYPE ${base} ${type}`);
+    for (const [key, value] of entries) {
+      const name = key.split('{')[0];
+      if (name === base || name === `${base}_sum` || name === `${base}_count`) lines.push(`${key} ${value}`);
+    }
+  }
+  lines.push('# HELP helpdesk_process_uptime_seconds Durée de fonctionnement du processus');
+  lines.push('# TYPE helpdesk_process_uptime_seconds gauge');
+  lines.push(`helpdesk_process_uptime_seconds ${Math.round((Date.now() - metricsStart) / 1000)}`);
+  lines.push('# HELP helpdesk_process_resident_memory_bytes Mémoire résidente du processus');
+  lines.push('# TYPE helpdesk_process_resident_memory_bytes gauge');
+  lines.push(`helpdesk_process_resident_memory_bytes ${process.memoryUsage().rss}`);
+  return lines.join('\n') + '\n';
+}
+
+// Motifs d'attaque courants. Ce n'est PAS une protection (la protection, ce sont les requêtes
+// paramétrées et l'encodage de sortie) : c'est un détecteur qui alimente le journal, les métriques
+// et les alertes. Il peut produire de rares faux positifs ; il ne bloque jamais une requête.
+const SUSPICIOUS_PATTERNS = [
+  { type: 'sqli', re: /('|%27)\s*(or|and)\s+['"\d]/i },
+  { type: 'sqli', re: /\bunion\b[\s\S]{0,30}\bselect\b/i },
+  { type: 'sqli', re: /;\s*(drop|delete|update|insert|alter)\b/i },
+  { type: 'sqli', re: /\b(pg_sleep|sleep|benchmark)\s*\(/i },
+  { type: 'xss', re: /<\s*script\b|javascript:|\bon(error|load|click|mouseover|focus)\s*=/i },
+];
+function noteInjection(req, field, value) {
+  if (typeof value !== 'string' || !value) return;
+  for (const { type, re } of SUSPICIOUS_PATTERNS) {
+    if (!re.test(value)) continue;
+    const route = req.route ? (req.baseUrl || '') + req.route.path : 'inconnue';
+    incMetric('helpdesk_injection_suspected_total', { type, route });
+    console.log(JSON.stringify({
+      ts: new Date().toISOString(),
+      level: 'warn',
+      event: 'injection_suspected',
+      type,
+      field,
+      route,
+      ip: req.ip || req.socket.remoteAddress,
+      username: req.user ? req.user.username : null,
+      sample: value.slice(0, 80),   // JSON.stringify neutralise les retours à la ligne (pas d'injection dans le journal)
+    }));
+    return;
+  }
+}
+
+function startMetricsServer() {
+  const port = process.env.METRICS_PORT === undefined ? 9100 : Number(process.env.METRICS_PORT);
+  if (!port) return;   // METRICS_PORT=0 désactive le serveur de métriques
+  const http = require('http');
+  const server = http.createServer((req, res) => {
+    if (req.method === 'GET' && req.url === '/metrics') {
+      res.writeHead(200, { 'Content-Type': 'text/plain; version=0.0.4; charset=utf-8' });
+      res.end(renderMetrics());
+    } else {
+      res.writeHead(404);
+      res.end();
+    }
+  });
+  server.on('error', (err) => console.error('Serveur de métriques indisponible :', err.message));
+  server.listen(port, () => console.log(`métriques Prometheus sur :${port}/metrics`));
+}
+
+// =============================================================================
+// JOURNALISATION STRUCTURÉE (une ligne JSON par requête, lue par Loki)
+// Ne jamais y écrire de mot de passe, de jeton ni de secret.
 // =============================================================================
 app.use((req, res, next) => {
-  const start = Date.now();
-
+  const start = process.hrtime.bigint();
   res.on('finish', () => {
-    const duration = Date.now() - start;
-    const logEntry = {
+    const seconds = Number(process.hrtime.bigint() - start) / 1e9;
+    const route = req.route ? (req.baseUrl || '') + req.route.path : 'inconnue';
+    incMetric('helpdesk_http_requests_total', { method: req.method, route, status: res.statusCode });
+    incMetric('helpdesk_http_request_duration_seconds_sum', { route }, seconds);
+    incMetric('helpdesk_http_request_duration_seconds_count', { route }, 1);
+    console.log(JSON.stringify({
       ts: new Date().toISOString(),
+      level: res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info',
+      event: 'http_request',
       method: req.method,
+      route,
       url: req.originalUrl,
       ip: req.ip || req.socket.remoteAddress,
       user_id: req.user ? req.user.id : null,
       username: req.user ? req.user.username : null,
       role: req.user ? req.user.role : null,
       status: res.statusCode,
-      duration_ms: duration,
-    };
-    console.log(JSON.stringify(logEntry));
+      duration_ms: Math.round(seconds * 1000),
+    }));
   });
   next();
 });
@@ -233,12 +350,15 @@ app.post('/login', loginLimiter, async (req, res) => {
   if (!username || !password) {
     return res.status(400).json({ error: 'Identifiant et mot de passe requis' });
   }
+  noteInjection(req, 'username', username);
 
   try {
     const r = await pool.query('SELECT * FROM users WHERE username = $1', [username.trim()]);
     const u = r.rows[0];
 
     if (!u || !(await bcrypt.compare(password, u.password_hash))) {
+      incMetric('helpdesk_login_failures_total');
+      console.log(JSON.stringify({ ts: new Date().toISOString(), level: 'warn', event: 'login_failure', username: String(username).slice(0, 50), ip: req.ip || req.socket.remoteAddress }));
       await logAudit(null, username, 'AUTH_FAILURE', 'Échec de connexion (mauvais identifiants)', req.ip);
       return res.status(401).json({ error: 'Identifiants invalides' });
     }
@@ -340,8 +460,8 @@ app.get('/tickets', auth, async (req, res) => {
 // GET /tickets/:id : Détail d'un ticket avec commentaires et historique
 // VULN-003 (IDOR) CORRIGÉE (phase 5) : un utilisateur ne lit que ses propres tickets.
 app.get('/tickets/:id', auth, async (req, res) => {
-  const ticketId = parseInt(req.params.id, 10);
-  if (isNaN(ticketId)) return res.status(400).json({ error: 'Identifiant de ticket invalide' });
+  const ticketId = parseId(req.params.id);
+  if (ticketId === null) return res.status(400).json({ error: 'Identifiant de ticket invalide' });
 
   try {
     const t = await pool.query(
@@ -406,6 +526,8 @@ app.post('/tickets', auth, async (req, res) => {
   if (typeof title !== 'string' || typeof description !== 'string' || !title.trim() || !description.trim()) {
     return res.status(400).json({ error: 'Le titre et la description sont obligatoires' });
   }
+  noteInjection(req, 'title', title);
+  noteInjection(req, 'description', description);
   if (title.length > 200 || description.length > 5000) {
     return res.status(400).json({ error: 'Titre (200 caractères max) ou description (5000 max) trop long' });
   }
@@ -457,7 +579,8 @@ app.post('/tickets', auth, async (req, res) => {
 
 // PATCH /tickets/:id/status : Prise en charge et changement de statut (Rôle agent obligatoire)
 app.patch('/tickets/:id/status', auth, requireRole('agent'), async (req, res) => {
-  const ticketId = parseInt(req.params.id, 10);
+  const ticketId = parseId(req.params.id);
+  if (ticketId === null) return res.status(400).json({ error: 'Identifiant de ticket invalide' });
   const { status, comment } = req.body;
 
   if (!['open', 'in_progress', 'closed'].includes(status)) {
@@ -513,7 +636,8 @@ app.patch('/tickets/:id/status', auth, requireRole('agent'), async (req, res) =>
 // FAILLE 2 (XSS stocké côté stockage) :
 // Le corps du commentaire est enregistré tel quel en base.
 app.post('/tickets/:id/comments', auth, async (req, res) => {
-  const ticketId = parseInt(req.params.id, 10);
+  const ticketId = parseId(req.params.id);
+  if (ticketId === null) return res.status(400).json({ error: 'Identifiant de ticket invalide' });
   const { body } = req.body;
 
   if (typeof body !== 'string' || !body.trim()) {
@@ -534,6 +658,7 @@ app.post('/tickets/:id/comments', auth, async (req, res) => {
 
     // VULN-002 (XSS stocké) CORRIGÉE (phase 5) : le texte est stocké brut (c'est une donnée) ;
     // l'encodage se fait à l'AFFICHAGE : le frontend utilise textContent / escapeHtml.
+    noteInjection(req, 'body', body);
     const commentBody = body.trim();
 
     await pool.query(
@@ -578,6 +703,7 @@ app.post('/tickets/:id/comments', auth, async (req, res) => {
 // VULN-001 (injection SQL) CORRIGÉE (phase 5) : requête paramétrée. La saisie de l'utilisateur
 // n'est jamais concaténée dans le SQL ; elle est transmise comme paramètre ($1).
 app.get('/search', auth, searchLimiter, async (req, res) => {
+  noteInjection(req, 'q', String(req.query.q || ''));
   const q = String(req.query.q || '').slice(0, 100);
   const isAgentOrAdmin = req.user.role === 'agent' || req.user.role === 'admin';
 
@@ -640,7 +766,8 @@ app.get('/notifications', auth, async (req, res) => {
 
 // PATCH /notifications/:id/read : Marquer une notification comme lue
 app.patch('/notifications/:id/read', auth, async (req, res) => {
-  const notifId = parseInt(req.params.id, 10);
+  const notifId = parseId(req.params.id);
+  if (notifId === null) return res.status(400).json({ error: 'Identifiant de notification invalide' });
   try {
     await pool.query(
       'UPDATE notifications SET is_read = true WHERE id = $1 AND user_id = $2',
@@ -833,7 +960,8 @@ app.post('/admin/users', auth, requireRole('admin'), async (req, res) => {
 
 // PATCH /admin/users/:id : Modification de rôle ou activation/désactivation
 app.patch('/admin/users/:id', auth, requireRole('admin'), async (req, res) => {
-  const targetId = parseInt(req.params.id, 10);
+  const targetId = parseId(req.params.id);
+  if (targetId === null) return res.status(400).json({ error: "Identifiant d'utilisateur invalide" });
   const { role, is_active } = req.body;
 
   try {
@@ -977,8 +1105,9 @@ async function seedDatabase() {
 const PORT = process.env.PORT || 3000;
 seedDatabase().then(() => {
   app.listen(PORT, () => {
-    console.log(`helpdesk-backend démarré sur :${PORT} (phase 5 : failles corrigées)`);
+    console.log(`helpdesk-backend démarré sur :${PORT} (phase 8 : observabilité)`);
   });
+  startMetricsServer();
 }).catch((err) => {
   console.error('Échec démarrage backend:', err);
 });

@@ -1,0 +1,11 @@
+# Cluster kind local pour HelpDesk (phase 6).
+# L'application sera joignable sur http://localhost:8081 (NodePort 30080 du cluster).
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30080
+        hostPort: 8081
+        listenAddress: "127.0.0.1"   # accessible uniquement depuis ce PC, pas depuis le réseau
+        protocol: TCP
