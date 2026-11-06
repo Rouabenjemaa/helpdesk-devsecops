@@ -26,7 +26,8 @@ spec:
           image: ghcr.io/rouabenjemaa/helpdesk-devsecops/helpdesk-backend:79949224bd194dcae9092cf9abbccaf1b10195a9
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 3000
+            - { name: http, containerPort: 3000 }
+            - { name: metrics, containerPort: 9100 }     # métriques Prometheus (jamais exposé par nginx)
           env:
             - { name: PORT, value: "3000" }
             - { name: DB_HOST, value: db }
@@ -34,6 +35,7 @@ spec:
             - { name: DB_NAME, value: helpdesk }
             - { name: DB_USER, value: helpdesk }
             - { name: TRUST_PROXY, value: "1" }          # nginx (frontend) est devant l'API
+            - { name: METRICS_PORT, value: "9100" }
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef: { name: helpdesk-db, key: POSTGRES_PASSWORD }
@@ -73,3 +75,16 @@ spec:
   selector: { app: backend }
   ports:
     - { port: 3000, targetPort: 3000 }
+---
+# Service "headless" (clusterIP: None) réservé à Prometheus : le DNS renvoie l'adresse de chaque pod du
+# backend, ce qui permet de collecter chaque réplique séparément.
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-metrics
+  namespace: helpdesk
+spec:
+  clusterIP: None
+  selector: { app: backend }
+  ports:
+    - { name: metrics, port: 9100, targetPort: 9100 }

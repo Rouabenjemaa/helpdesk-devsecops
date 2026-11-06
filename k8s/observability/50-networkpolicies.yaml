@@ -1,0 +1,63 @@
+# Isolation des composants d'observabilité (ENTRÉE uniquement).
+# Les flux de SORTIE ne sont volontairement pas restreints : Prometheus doit joindre le backend, Alloy doit
+# joindre l'API Kubernetes et Loki, et la sortie vers l'API du cluster est difficile à décrire proprement
+# avec kind. Limite connue, à mentionner dans le rapport.
+# "kubectl port-forward" n'est pas concerné : la connexion naît à l'intérieur du pod (boucle locale).
+#
+# 1. Rien n'entre dans monitoring, sauf ce qui est listé ci-dessous.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: monitoring
+spec:
+  podSelector: {}
+  policyTypes: ["Ingress"]
+---
+# 2. Prometheus n'est interrogé que par Grafana.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: prometheus-ingress
+  namespace: monitoring
+spec:
+  podSelector:
+    matchLabels: { app: prometheus }
+  policyTypes: ["Ingress"]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: { app: grafana }
+      ports:
+        - { protocol: TCP, port: 9090 }
+---
+# 3. Loki reçoit les journaux d'Alloy et est interrogé par Grafana.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: loki-ingress
+  namespace: monitoring
+spec:
+  podSelector:
+    matchLabels: { app: loki }
+  policyTypes: ["Ingress"]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels: { kubernetes.io/metadata.name: log-agent }
+          podSelector:
+            matchLabels: { app: alloy }
+        - podSelector:
+            matchLabels: { app: grafana }
+      ports:
+        - { protocol: TCP, port: 3100 }
+---
+# 4. Rien n'entre dans l'agent de journaux.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: log-agent
+spec:
+  podSelector: {}
+  policyTypes: ["Ingress"]

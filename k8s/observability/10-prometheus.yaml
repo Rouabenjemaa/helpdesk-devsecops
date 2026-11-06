@@ -1,0 +1,138 @@
+# Prometheus : collecte les métriques du backend (port 9100, jamais exposé au public) et évalue les alertes.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: monitoring
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+    rule_files:
+      - /etc/prometheus/rules.yml
+    scrape_configs:
+      - job_name: prometheus
+        static_configs:
+          - targets: ["localhost:9090"]
+      # Le Service "backend-metrics" est "headless" : le DNS renvoie l'adresse de CHAQUE pod du backend,
+      # donc chaque réplique est collectée séparément (pas de mélange de compteurs).
+      - job_name: backend
+        dns_sd_configs:
+          - names: ["backend-metrics.helpdesk.svc.cluster.local"]
+            type: A
+            port: 9100
+            refresh_interval: 30s
+  rules.yml: |
+    groups:
+      - name: helpdesk-securite
+        rules:
+          - alert: TentativeInjectionDetectee
+            expr: sum by (type) (increase(helpdesk_injection_suspected_total[5m])) > 0
+            labels:
+              severity: warning
+              categorie: securite
+            annotations:
+              summary: "Tentative d'injection détectée (type {{ $labels.type }})"
+              description: "Une saisie ressemblant à une attaque {{ $labels.type }} a été reçue ces 5 dernières minutes. Suivre docs/plan-reponse-incident.md."
+          - alert: ForceBruteConnexionPossible
+            expr: sum(increase(helpdesk_login_failures_total[5m])) > 5
+            labels:
+              severity: warning
+              categorie: securite
+            annotations:
+              summary: "Plus de 5 échecs de connexion en 5 minutes"
+              description: "Possible attaque par force brute sur /login. Voir les journaux (event login_failure) pour l'adresse et le compte visés."
+          - alert: LimiteDeDebitDeclenchee
+            expr: sum(increase(helpdesk_http_requests_total{status="429"}[5m])) > 0
+            labels:
+              severity: info
+              categorie: securite
+            annotations:
+              summary: "Le limiteur de débit a refusé des requêtes"
+              description: "Au moins une requête a reçu un code 429 : un client dépasse les quotas de /login ou /search."
+      - name: helpdesk-disponibilite
+        rules:
+          - alert: PicErreursServeur
+            expr: sum(rate(helpdesk_http_requests_total{status=~"5.."}[5m])) > 0.05
+            for: 2m
+            labels:
+              severity: critical
+              categorie: disponibilite
+            annotations:
+              summary: "Taux élevé d'erreurs 5xx"
+              description: "Plus d'une erreur serveur toutes les 20 secondes depuis 2 minutes. Lire les journaux (level=error)."
+          - alert: BackendIndisponible
+            expr: absent(up{job="backend"} == 1)
+            for: 1m
+            labels:
+              severity: critical
+              categorie: disponibilite
+            annotations:
+              summary: "Aucune réplique du backend ne répond aux collectes"
+              description: "Prometheus ne joint plus aucun pod du backend. kubectl get pods -n helpdesk"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: monitoring
+  labels: { app: prometheus }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: prometheus }
+  template:
+    metadata:
+      labels: { app: prometheus }
+    spec:
+      automountServiceAccountToken: false     # la découverte DNS n'a pas besoin de l'API Kubernetes
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: prometheus
+          image: prom/prometheus:v3.5.0
+          args:
+            - --config.file=/etc/prometheus/prometheus.yml
+            - --storage.tsdb.path=/prometheus
+            - --storage.tsdb.retention.time=2d
+            - --web.listen-address=0.0.0.0:9090
+          ports:
+            - containerPort: 9090
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { cpu: 500m, memory: 512Mi }
+          readinessProbe:
+            httpGet: { path: /-/ready, port: 9090 }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /-/healthy, port: 9090 }
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          volumeMounts:
+            - { name: config, mountPath: /etc/prometheus, readOnly: true }
+            - { name: data, mountPath: /prometheus }
+      volumes:
+        - name: config
+          configMap: { name: prometheus-config }
+        - name: data
+          emptyDir: {}                         # données perdues au redémarrage : acceptable pour ce laboratoire
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: monitoring
+spec:
+  selector: { app: prometheus }
+  ports:
+    - { port: 9090, targetPort: 9090 }

@@ -1,0 +1,132 @@
+# Agent de collecte des journaux : Grafana Alloy.
+# Le cahier des charges cite Promtail, mais Promtail est en fin de vie depuis le 2 mars 2026 (plus aucun
+# correctif, même de sécurité). Alloy est son successeur officiel et sait lire une configuration Promtail
+# telle quelle (option --config.format=promtail) : on garde donc la configuration Promtail classique.
+#
+# Lecture des journaux : /var/log/pods du noeud (hostPath, lecture seule). Seuls les pods de l'espace de
+# noms "helpdesk" sont collectés.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: alloy
+  namespace: log-agent
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: alloy-lecture-pods
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]      # lecture seule : découvrir les pods à suivre
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: alloy-lecture-pods
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: alloy-lecture-pods
+subjects:
+  - kind: ServiceAccount
+    name: alloy
+    namespace: log-agent
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alloy-promtail-config
+  namespace: log-agent
+data:
+  promtail.yaml: |
+    server:
+      http_listen_port: 9080
+      grpc_listen_port: 0
+    positions:
+      filename: /var/lib/alloy/data/positions.yaml
+    clients:
+      - url: http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push
+    scrape_configs:
+      - job_name: helpdesk-pods
+        pipeline_stages:
+          - cri: {}
+          - json:
+              expressions:
+                level: level
+                event: event
+          - labels:
+              level:
+              event:
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names: ["helpdesk"]
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: namespace
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
+          - source_labels: [__meta_kubernetes_pod_container_name]
+            target_label: container
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            target_label: app
+          - source_labels: [__meta_kubernetes_pod_uid, __meta_kubernetes_pod_container_name]
+            separator: /
+            target_label: __path__
+            replacement: /var/log/pods/*$1/*.log
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: alloy
+  namespace: log-agent
+  labels: { app: alloy }
+spec:
+  selector:
+    matchLabels: { app: alloy }
+  template:
+    metadata:
+      labels: { app: alloy }
+    spec:
+      serviceAccountName: alloy              # nécessaire : découvrir les pods via l'API Kubernetes
+      securityContext:
+        runAsUser: 0                         # les fichiers de /var/log/pods appartiennent à root
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: alloy
+          image: grafana/alloy:v1.10.2
+          args:
+            - run
+            - --config.format=promtail
+            - --config.bypass-conversion-errors
+            - --storage.path=/var/lib/alloy/data
+            - --server.http.listen-addr=0.0.0.0:12345
+            - /etc/alloy/promtail.yaml
+          ports:
+            - containerPort: 12345
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { cpu: 300m, memory: 256Mi }
+          readinessProbe:
+            httpGet: { path: /-/ready, port: 12345 }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          volumeMounts:
+            - { name: config, mountPath: /etc/alloy, readOnly: true }
+            - { name: pods-logs, mountPath: /var/log/pods, readOnly: true }
+            - { name: data, mountPath: /var/lib/alloy/data }
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - name: config
+          configMap: { name: alloy-promtail-config }
+        - name: pods-logs
+          hostPath: { path: /var/log/pods, type: Directory }
+        - name: data
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
