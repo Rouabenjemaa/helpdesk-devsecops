@@ -100,7 +100,7 @@ spec:
             - run
             - --config.format=promtail
             - --config.bypass-conversion-errors
-            - --storage.path=/var/lib/alloy/data
+            - --storage.path=/tmp/alloy
             - --server.http.listen-addr=0.0.0.0:12345
             - /etc/alloy/promtail.yaml
           ports:
