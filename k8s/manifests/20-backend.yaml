@@ -23,7 +23,7 @@ spec:
         seccompProfile: { type: RuntimeDefault }
       containers:
         - name: backend
-          image: ghcr.io/rouabenjemaa/helpdesk-devsecops/helpdesk-backend:79949224bd194dcae9092cf9abbccaf1b10195a9
+          image: ghcr.io/rouabenjemaa/helpdesk-devsecops/helpdesk-backend:f3cef33d91aa7c0776988c540c18947b85f13dba
           imagePullPolicy: IfNotPresent
           ports:
             - { name: http, containerPort: 3000 }
