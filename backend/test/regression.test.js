@@ -202,6 +202,8 @@ test('VULN-004 : le serveur refuse de démarrer sans JWT_SECRET valide', () => {
 test('CONFIG : le serveur refuse de démarrer sans identifiants PostgreSQL', () => {
   const r = spawnSync(process.execPath, ['server.js'], {
     cwd: BACKEND_DIR,
+    // Generate a per-run value so secret scanners do not mistake a fixed test
+    // fixture for a reusable JWT signing secret.
     env: { PATH: process.env.PATH, JWT_SECRET: require('node:crypto').randomBytes(32).toString('hex') },
     encoding: 'utf8',
     timeout: 15000,
