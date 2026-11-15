@@ -11,27 +11,37 @@ Prérequis : Node.js 20+, Docker.
 
 Pour Docker Compose, commencez par copier `.env.example` vers `.env` et remplacez les valeurs `EXAMPLE_ONLY_*` par des valeurs locales. Compose échoue si les paramètres PostgreSQL sont absents. `ENABLE_DEMO_SEED=true` active les comptes de démonstration en développement; laissez-le à `false` en production. Le seed ne change jamais les comptes existants. Le schéma seul ne crée aucun compte.
 
-```bash
-# 1. Base PostgreSQL (schéma chargé automatiquement)
+```powershell
+# Démarrage manuel, depuis PowerShell (le mot de passe est saisi sans écho).
+$env:POSTGRES_DB = 'helpdesk'
+$env:POSTGRES_USER = 'helpdesk'
+$secure = Read-Host 'Mot de passe PostgreSQL local' -AsSecureString
+$env:POSTGRES_PASSWORD = [Net.NetworkCredential]::new('', $secure).Password
 bash scripts/start-db.sh
-#    PowerShell : docker run -d --name helpdesk-db -e POSTGRES_DB=helpdesk -e POSTGRES_USER=helpdesk -e POSTGRES_PASSWORD=change_me_fictif_123 -p 5432:5432 -v "${PWD}/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro" postgres:16-alpine
 
-# 2. Backend (sert aussi l'interface)
+# 2. Backend : transmettre explicitement les variables requises.
 cd backend
-npm install
+$env:DB_HOST = 'localhost'
+$env:DB_PORT = '5432'
+$env:DB_NAME = $env:POSTGRES_DB
+$env:DB_USER = $env:POSTGRES_USER
+$env:DB_PASSWORD = $env:POSTGRES_PASSWORD
+$env:JWT_SECRET = node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+$env:ENABLE_DEMO_SEED = 'true'
+npm ci
 npm start
 
 # 3. Ouvrir http://localhost:3000     (santé : http://localhost:3000/api/health)
 ```
 
-Pour repartir d'une base propre : relancer `scripts/start-db.sh`.
+Le script ne supprime jamais de conteneur et utilise le volume Docker `helpdesk-db-local-data`. S'il existe déjà un conteneur `helpdesk-db-local`, inspectez-le et sauvegardez ses données avant toute opération. Pour une nouvelle base Compose, les données du volume local ne sont pas migrées automatiquement.
+Après avoir arrêté le backend, effacez les variables sensibles de la session PowerShell si elle reste ouverte : `Remove-Item Env:POSTGRES_PASSWORD, Env:DB_PASSWORD, Env:JWT_SECRET`.
 
 ## Phase 2 : tout lancer avec Docker Compose
 
-Arrêtez d'abord le backend lancé à la main (Ctrl+C) et supprimez la base de la phase 1, sinon le nom `helpdesk-db` est déjà pris :
+Arrêtez d'abord le backend lancé à la main (Ctrl+C). Compose utilise sa propre base et son propre volume; aucune donnée de la base locale n'est transférée automatiquement.
 
 ```powershell
-docker rm -f helpdesk-db
 docker compose up --build -d
 docker compose ps
 ```
@@ -62,6 +72,8 @@ docker compose up --build -d
 Pour lancer le backend à la main : `$env:JWT_SECRET = "<valeur>"` avant `npm start`.
 Détails, GitHub Secrets, Secret Kubernetes et rotation : `docs/secrets-phase4.md`.
 Pour activer le seed local : `$env:ENABLE_DEMO_SEED = "true"`. En production, `NODE_ENV=production` désactive le seed par défaut et interdit son activation.
+
+Pour le lancement manuel, les variables `DB_USER` et `DB_PASSWORD` sont obligatoires et doivent être définies dans le même environnement que `npm start`; Node ne charge pas `.env` automatiquement.
 
 ## Phase 5 : failles corrigées
 
@@ -114,6 +126,31 @@ La branche `main` est la branche principale intégrée; `dev` sert au développe
 - Phase 7, OWASP ZAP : [comparaison avant/après](docs/phase7-zap.md) et [preuves](docs/preuves/phase7/comparaison.md)
 - Phase 8, observabilité : [architecture et procédures](docs/phase8-observabilite.md) et [preuves](docs/preuves/phase8/README.md)
 
+### Premier administrateur Kubernetes
+
+En production, aucun compte de démonstration n'est créé. Pour une base Kubernetes neuve, appliquer le schéma puis ouvrir un port-forward dans un terminal :
+
+```powershell
+kubectl port-forward -n helpdesk svc/db 5433:5432
+```
+
+Dans un second terminal PowerShell, depuis `backend`, charger le mot de passe DB depuis le Secret sans l'afficher, puis saisir le mot de passe initial de l'administrateur via une invite masquée :
+
+```powershell
+npm ci
+$encoded = kubectl get secret helpdesk-db -n helpdesk -o jsonpath="{.data.POSTGRES_PASSWORD}"
+$env:DB_HOST = '127.0.0.1'; $env:DB_PORT = '5433'; $env:DB_NAME = 'helpdesk'; $env:DB_USER = 'helpdesk'
+$env:DB_PASSWORD = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($encoded))
+$env:BOOTSTRAP_ADMIN_USERNAME = Read-Host 'Identifiant administrateur initial'
+$secure = Read-Host 'Mot de passe administrateur initial (12 caractères minimum)' -AsSecureString
+$env:BOOTSTRAP_ADMIN_PASSWORD = [Net.NetworkCredential]::new('', $secure).Password
+npm run bootstrap-admin
+Remove-Item Env:DB_PASSWORD, Env:BOOTSTRAP_ADMIN_PASSWORD, Env:BOOTSTRAP_ADMIN_USERNAME, Env:DB_HOST, Env:DB_PORT, Env:DB_NAME, Env:DB_USER
+Remove-Variable encoded, secure
+```
+
+Le script [bootstrap-admin.js](backend/bootstrap-admin.js) ne fonctionne que si `users` est vide; il ne modifie ni ne promeut un compte existant. Si un compte existe déjà, utilisez l'administrateur existant; si aucun administrateur n'existe, passez par une procédure de récupération DBA approuvée.
+
 ## Corrections sécurité de cette branche
 
-Le seed ne réinitialise aucun mot de passe et est désactivé en production. PostgreSQL exige des identifiants explicites dans Compose. Les styles et scripts principaux sont servis depuis `frontend/styles.css` et `frontend/app.js`; les attributs `style` et gestionnaires `onclick` encore présents imposent toutefois de conserver `unsafe-inline` dans la CSP jusqu'à leur migration complète. Trivy bloque désormais les vulnérabilités HIGH et CRITICAL sur l'image.
+Le seed ne réinitialise aucun mot de passe et est désactivé en production. PostgreSQL exige des identifiants explicites dans Compose. Les rôles et états actifs des comptes sont revérifiés en base sur les routes authentifiées, ce qui invalide immédiatement les JWT après rétrogradation ou désactivation, au coût d'une requête DB par requête authentifiée. Les styles et scripts principaux sont servis depuis `frontend/styles.css` et `frontend/app.js`; les attributs `style` et gestionnaires `onclick` encore présents imposent toutefois de conserver `unsafe-inline` dans la CSP jusqu'à leur migration complète. Trivy bloque les vulnérabilités HIGH/CRITICAL détectées lorsqu'un correctif est disponible (`ignore-unfixed: true`); les vulnérabilités sans correctif ne bloquent pas le pipeline.

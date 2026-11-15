@@ -258,7 +258,7 @@ app.use((req, res, next) => {
 // =============================================================================
 
 // Vérification de l'authentification JWT
-function auth(req, res, next) {
+async function auth(req, res, next) {
   const authHeader = req.headers.authorization || '';
   if (!authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Jeton d\'authentification manquant' });
@@ -266,10 +266,22 @@ function auth(req, res, next) {
   const token = authHeader.substring(7);
   try {
     const decoded = jwt.verify(token, getJwtSecret(), { algorithms: ['HS256'] });
-    req.user = decoded;
-    next();
+    // Recharger le rôle et l'état du compte pour révoquer immédiatement les sessions modifiées.
+    const result = await pool.query(
+      'SELECT id, username, role, full_name, is_active FROM users WHERE id = $1',
+      [decoded.id]
+    );
+    const user = result.rows[0];
+    if (!user || !user.is_active || user.role !== decoded.role) {
+      return res.status(401).json({ error: 'Session invalide ou révoquée' });
+    }
+    req.user = { ...decoded, id: user.id, username: user.username, role: user.role, full_name: user.full_name };
+    return next();
   } catch (err) {
-    return res.status(401).json({ error: 'Session invalide ou expirée' });
+    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError' || err.name === 'NotBeforeError') {
+      return res.status(401).json({ error: 'Session invalide ou expirée' });
+    }
+    return res.status(503).json({ error: 'Service temporairement indisponible' });
   }
 }
 

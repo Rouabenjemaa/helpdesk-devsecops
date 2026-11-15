@@ -79,6 +79,22 @@ test('SEED : aucun mot de passe de démonstration n’est livré dans le fronten
   }
 });
 
+test('BOOTSTRAP : admin initial réservé à une base sans utilisateur', () => {
+  const script = fs.readFileSync(path.join(BACKEND_DIR, 'bootstrap-admin.js'), 'utf8');
+  assert.match(script, /bcrypt\.hash\(password, 12\)/);
+  assert.match(script, /COUNT\(\*\)::int AS count FROM users/);
+  assert.match(script, /Bootstrap is restricted to an empty users table/);
+  assert.doesNotMatch(script, /console\.(?:log|error)\([^\n]*(?:\$\{password\}|,\s*password|\+\s*password)/i);
+});
+
+test('DB locale : script sans suppression de conteneur et volume persistant', () => {
+  const script = fs.readFileSync(path.join(ROOT, 'scripts', 'start-db.sh'), 'utf8');
+  assert.doesNotMatch(script, /docker\s+rm\s+-f/);
+  assert.match(script, /POSTGRES_PASSWORD:\?/);
+  assert.match(script, /helpdesk-db-local-data/);
+  assert.match(script, /127\.0\.0\.1:5432:5432/);
+});
+
 test('VULN-002 : l\'API envoie une politique CSP et les en-têtes de sécurité', integration, async () => {
   const r = await fetch(`${BASE}/`);
   const csp = r.headers.get('content-security-policy') || '';
@@ -110,6 +126,53 @@ test('VULN-003 : un agent peut toujours lire n\'importe quel ticket', integratio
   assert.equal(r.status, 200);
 });
 
+test('AUTH : rôle modifié ou compte désactivé révoque immédiatement le JWT', integration, async () => {
+  const adminToken = await login('admin1');
+  const temporaryPassword = `audit-test-${Date.now()}-only`;
+  const username = `audit-demote-${Date.now()}`;
+  const created = await api('/admin/users', adminToken, {
+    method: 'POST',
+    body: JSON.stringify({ username, password: temporaryPassword, role: 'admin', full_name: 'Compte test audit' }),
+  });
+  assert.equal(created.status, 201);
+  const user = await created.json();
+
+  const loginResponse = await fetch(`${BASE}/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password: temporaryPassword }),
+  });
+  assert.equal(loginResponse.status, 200);
+  const userToken = (await loginResponse.json()).token;
+
+  const demoted = await api(`/admin/users/${user.id}`, adminToken, {
+    method: 'PATCH', body: JSON.stringify({ role: 'user' }),
+  });
+  assert.equal(demoted.status, 200);
+  assert.equal((await api('/admin/users', userToken)).status, 401);
+
+  const disabledUsername = `audit-disable-${Date.now()}`;
+  const disabledCreated = await api('/admin/users', adminToken, {
+    method: 'POST',
+    body: JSON.stringify({ username: disabledUsername, password: temporaryPassword, role: 'user', full_name: 'Compte test désactivé' }),
+  });
+  assert.equal(disabledCreated.status, 201);
+  const disabledUser = await disabledCreated.json();
+  const disabledLogin = await fetch(`${BASE}/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: disabledUsername, password: temporaryPassword }),
+  });
+  assert.equal(disabledLogin.status, 200);
+  const disabledToken = (await disabledLogin.json()).token;
+
+  const disabled = await api(`/admin/users/${disabledUser.id}`, adminToken, {
+    method: 'PATCH', body: JSON.stringify({ is_active: false }),
+  });
+  assert.equal(disabled.status, 200);
+  assert.equal((await api('/me', disabledToken)).status, 401);
+});
+
 // --- VULN-004 : secret en dur -----------------------------------------------
 test('VULN-004 : aucun secret n\'est écrit dans le code, le compose ni l\'exemple d\'environnement', () => {
   const files = [
@@ -134,6 +197,17 @@ test('VULN-004 : le serveur refuse de démarrer sans JWT_SECRET valide', () => {
     assert.equal(r.status, 1, 'le serveur doit s\'arrêter avec le code 1');
     assert.match(r.stderr, /JWT_SECRET/);
   }
+});
+
+test('CONFIG : le serveur refuse de démarrer sans identifiants PostgreSQL', () => {
+  const r = spawnSync(process.execPath, ['server.js'], {
+    cwd: BACKEND_DIR,
+    env: { PATH: process.env.PATH, JWT_SECRET: require('node:crypto').randomBytes(32).toString('hex') },
+    encoding: 'utf8',
+    timeout: 15000,
+  });
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /DB_USER et DB_PASSWORD sont obligatoires/);
 });
 
 // --- Robustesse (issu du scan ZAP) -----------------------------------------
