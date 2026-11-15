@@ -11,6 +11,9 @@ COPY . .
 
 # Étape 2 : Image d'exécution minimale avec utilisateur non privilégié (USER 10001)
 FROM node:20-alpine
+# Refresh Alpine packages so the final runtime image receives security fixes
+# released after the base Node image was published.
+RUN apk upgrade --no-cache
 # Phase 5 : l'application n'a besoin que de node. npm et yarn (inutiles à l'exécution) sont retirés :
 # cela supprime leur copie vulnérable de tar (CVE) et réduit la surface d'attaque.
 RUN addgroup -g 10001 app && adduser -D -u 10001 -G app app \

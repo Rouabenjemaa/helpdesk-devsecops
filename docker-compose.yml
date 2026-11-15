@@ -9,14 +9,14 @@ services:
     image: postgres:16-alpine
     container_name: helpdesk-db
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-helpdesk}
-      POSTGRES_USER: ${POSTGRES_USER:-helpdesk}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_fictif_123}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB obligatoire}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER obligatoire}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD obligatoire}
     volumes:
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
       - dbdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-helpdesk} -d ${POSTGRES_DB:-helpdesk}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:?POSTGRES_USER obligatoire} -d ${POSTGRES_DB:?POSTGRES_DB obligatoire}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -29,9 +29,11 @@ services:
     environment:
       DB_HOST: db
       DB_PORT: 5432
-      DB_NAME: ${POSTGRES_DB:-helpdesk}
-      DB_USER: ${POSTGRES_USER:-helpdesk}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-change_me_fictif_123}
+      DB_NAME: ${POSTGRES_DB:?POSTGRES_DB obligatoire}
+      DB_USER: ${POSTGRES_USER:?POSTGRES_USER obligatoire}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD obligatoire}
+      NODE_ENV: ${NODE_ENV:-development}
+      ENABLE_DEMO_SEED: ${ENABLE_DEMO_SEED:-false}
       # nginx est devant l'API : on lit l'adresse client dans X-Forwarded-For (limitation de débit)
       TRUST_PROXY: "1"
       # Secret JWT : lu dans le fichier .env (non versionné). Pas de valeur par défaut :

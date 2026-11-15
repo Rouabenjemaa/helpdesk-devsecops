@@ -1,5 +1,11 @@
 # Phase 8 : observabilité et réponse à incident
 
+## Flux réseau des politiques
+
+Les politiques limitent l'entrée dans les espaces `monitoring` et `log-agent`. L'egress reste actuellement ouvert, car Alloy doit joindre l'API Kubernetes (endpoint dépendant du cluster) et Loki, Prometheus doit joindre les deux pods backend sur 9100, et Grafana doit joindre Prometheus et Loki. L'entrée autorisée est précise : Grafana vers Prometheus 9090; Alloy vers Loki 3100; Grafana vers Loki 3100. L'entrée vers Alloy est refusée. Dans `helpdesk`, les politiques autorisent frontend vers backend 3000, backend vers PostgreSQL 5432 et Prometheus vers backend 9100; DNS est autorisé vers CoreDNS. Les politiques helpdesk ne filtrent pas l'egress des pods d'observabilité.
+
+Ces règles ont été examinées dans les manifestes; aucun test de déploiement sur cluster n'a été exécuté dans cette mission.
+
 **But :** voir ce qui se passe dans l'application (métriques, journaux), être alerté d'une attaque, et savoir réagir.
 
 ```mermaid

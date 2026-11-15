@@ -88,6 +88,7 @@ function rateLimit({ windowMs, max }) {
 const loginLimiter = rateLimit({ windowMs: 60 * 1000, max: 10 });   // 10 tentatives par minute
 const searchLimiter = rateLimit({ windowMs: 60 * 1000, max: 60 });  // 60 recherches par minute
 
+app.use(express.static(path.join(__dirname, '..', 'frontend')));
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
 });
@@ -112,10 +113,14 @@ function getJwtSecret() {
 const pool = new Pool({
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '5432', 10),
-  user: process.env.DB_USER || 'helpdesk',
-  password: process.env.DB_PASSWORD || 'change_me_fictif_123',
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME || 'helpdesk',
 });
+if (!process.env.DB_USER || !process.env.DB_PASSWORD) {
+  console.error('DB_USER et DB_PASSWORD sont obligatoires.');
+  process.exit(1);
+}
 
 // =============================================================================
 // PHASE 8 : MÉTRIQUES (Prometheus) ET DÉTECTION DE TENTATIVES D'ATTAQUE
@@ -253,7 +258,7 @@ app.use((req, res, next) => {
 // =============================================================================
 
 // Vérification de l'authentification JWT
-function auth(req, res, next) {
+async function auth(req, res, next) {
   const authHeader = req.headers.authorization || '';
   if (!authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Jeton d\'authentification manquant' });
@@ -261,10 +266,22 @@ function auth(req, res, next) {
   const token = authHeader.substring(7);
   try {
     const decoded = jwt.verify(token, getJwtSecret(), { algorithms: ['HS256'] });
-    req.user = decoded;
-    next();
+    // Recharger le rôle et l'état du compte pour révoquer immédiatement les sessions modifiées.
+    const result = await pool.query(
+      'SELECT id, username, role, full_name, is_active FROM users WHERE id = $1',
+      [decoded.id]
+    );
+    const user = result.rows[0];
+    if (!user || !user.is_active || user.role !== decoded.role) {
+      return res.status(401).json({ error: 'Session invalide ou révoquée' });
+    }
+    req.user = { ...decoded, id: user.id, username: user.username, role: user.role, full_name: user.full_name };
+    return next();
   } catch (err) {
-    return res.status(401).json({ error: 'Session invalide ou expirée' });
+    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError' || err.name === 'NotBeforeError') {
+      return res.status(401).json({ error: 'Session invalide ou expirée' });
+    }
+    return res.status(503).json({ error: 'Service temporairement indisponible' });
   }
 }
 
@@ -1024,6 +1041,16 @@ app.get('/admin/audit', auth, requireRole('admin'), async (req, res) => {
 // SEED AUTOMATIQUE DES DONNÉES FICTIVES AU DÉMARRAGE
 // =============================================================================
 async function seedDatabase() {
+  const seedEnabled = process.env.ENABLE_DEMO_SEED === undefined
+    ? process.env.NODE_ENV !== 'production'
+    : process.env.ENABLE_DEMO_SEED === 'true';
+  if (!seedEnabled) {
+    console.log('[SEED] Désactivé.');
+    return;
+  }
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('ENABLE_DEMO_SEED ne peut pas être activé en production.');
+  }
   for (let i = 0; i < 30; i++) {
     try {
       await pool.query('SELECT 1');
@@ -1033,17 +1060,7 @@ async function seedDatabase() {
     }
   }
 
-  // Vérifier si des utilisateurs existent déjà
-  const userCheck = await pool.query('SELECT 1 FROM users LIMIT 1');
-  if (userCheck.rows.length > 0) {
-    // S'assurer que le mot de passe bcrypt correspond bien à Passw0rd! pour les tests
-    const testHash = await bcrypt.hash('Passw0rd!', 10);
-    await pool.query('UPDATE users SET password_hash = $1 WHERE username IN (\'roua\', \'mahdi\', \'charlie\', \'agent1\', \'agent2\', \'admin1\')', [testHash]);
-    console.log('[SEED] Mots de passe de test validés pour roua, mahdi, agent1, admin1 (Passw0rd!).');
-    return;
-  }
-
-  console.log('[SEED] Base vide détectée, initialisation des données fictives...');
+  const existingUsers = await pool.query('SELECT 1 FROM users LIMIT 1');
   const hash = await bcrypt.hash('Passw0rd!', 10);
 
   // Insertion utilisateurs
@@ -1055,7 +1072,19 @@ async function seedDatabase() {
       ('agent1',  $1, 'agent', 'Agent Un',         'agent1@helpdesk.local', true),
       ('agent2',  $1, 'agent', 'Agent Deux',       'agent2@helpdesk.local', true),
       ('admin1',  $1, 'admin', 'Administrateur IT', 'admin@helpdesk.local', true)
+    ON CONFLICT (username) DO NOTHING
   `, [hash]);
+
+  if (existingUsers.rows.length > 0) {
+    console.log('[SEED] Comptes de démonstration absents créés; données existantes conservées.');
+    return;
+  }
+
+  const userCheck = await pool.query('SELECT 1 FROM tickets LIMIT 1');
+  if (userCheck.rows.length > 0) {
+    console.log('[SEED] Comptes absents créés; données applicatives existantes conservées.');
+    return;
+  }
 
   // Insertion tickets
   await pool.query(`

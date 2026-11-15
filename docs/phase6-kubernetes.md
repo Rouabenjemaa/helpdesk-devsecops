@@ -53,7 +53,7 @@ powershell -ExecutionPolicy Bypass -File k8s\scripts\deploy.ps1
 
 Le script : construit l'image frontend et la charge dans kind, crée l'espace de noms, **génère les secrets** (JWT et mot de passe de base) directement dans le cluster, charge le schéma de la base, applique les manifestes, puis attend que les pods soient prêts. Il est rejouable et ne régénère jamais un secret existant.
 
-Ouvrez ensuite **http://localhost:8081** et connectez-vous avec `roua` / `Passw0rd!`. **Capture 2** : l'application + `kubectl get pods -n helpdesk` (tous `Running`, `1/1`).
+Ouvrez ensuite **http://localhost:8081**. Les identifiants de démonstration ne sont plus provisionnés en production; créez les comptes requis par un processus d'administration contrôlé. **Capture 2** : l'application + `kubectl get pods -n helpdesk` (tous `Running`, `1/1`).
 
 ## 4. Ce qui est durci, et pourquoi
 
@@ -117,8 +117,8 @@ Changer le secret JWT : `kubectl delete secret helpdesk-jwt -n helpdesk`, relanc
 ## 8. Ce qui reste à faire (hors de ce guide)
 
 - **Déploiement automatique depuis le pipeline** : les machines de GitHub ne peuvent pas atteindre un cluster `kind` local. Il faudrait un *runner* auto-hébergé sur ce PC, ou un cluster éphémère créé dans le pipeline pour tester les manifestes.
-- **Phase 7** : le scanner ZAP pourra viser http://localhost:8081.
-- **Phase 8** : ouvrir dans `40-networkpolicies.yaml` les flux de Prometheus vers le backend et de Promtail vers Loki.
+- **Phase 7** : terminée; voir `docs/phase7-zap.md` et `docs/preuves/phase7/`.
+- **Phase 8** : terminée; voir `docs/phase8-observabilite.md` et `docs/preuves/phase8/`.
 - **Bonus** : règles Kyverno (interdire les pods root ou les images sans tag précis) ; scan Trivy des manifestes.
 
 ## 9. Pour la fiche de contribution

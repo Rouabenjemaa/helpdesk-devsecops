@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --check server.js && node --test test/regression.test.js"
+    "bootstrap-admin": "node bootstrap-admin.js",
+    "test": "node --check server.js && node --check bootstrap-admin.js && node --test test/regression.test.js"
   },
   "dependencies": {
     "bcryptjs": "2.4.3",
