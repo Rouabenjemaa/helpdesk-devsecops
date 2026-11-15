@@ -56,8 +56,8 @@ docker exec helpdesk-backend id          # uid=10001(app) gid=10001(app)
 docker exec helpdesk-frontend whoami     # nginx (image nginx-unprivileged)
 ```
 
-Arrêter : `docker compose down` (ajoutez `-v` pour aussi effacer les données de la base).
-Les preuves d'attaque (`scripts/proofs.sh`) s'utilisent avec `API=http://localhost:8080/api bash scripts/proofs.sh`.
+Arrêter les services sans supprimer les données : `docker compose down`. **N'ajoutez pas `-v` sauf si vous voulez supprimer définitivement le volume et les données PostgreSQL.**
+Les vérifications de sécurité locales (`scripts/proofs.sh`) s'utilisent avec `API=http://localhost:8080/api bash scripts/proofs.sh`.
 
 ## Phase 4 : secret JWT (obligatoire pour démarrer)
 
@@ -90,18 +90,18 @@ Ces comptes ne sont créés que lorsque le seed est activé hors production. Ils
 | agent | `agent1` | voir tous les tickets, changer le statut, commenter |
 | admin | `admin1` | gérer les comptes et rôles, journal d'audit |
 
-## Les 4 failles volontaires
+## Failles de démonstration : état historique et corrections
 
-| N° | Faille | Emplacement | OWASP | Preuve |
-|---|---|---|---|---|
-| VULN-001 | Injection SQL | `GET /search?q=` (`backend/server.js`) | A03 | `' OR 1=1 --` renvoie tous les tickets |
-| VULN-002 | XSS stocké | commentaires (`frontend/index.html`) | A03 | un commentaire HTML s'exécute chez l'agent |
-| VULN-003 | IDOR | `GET /tickets/:id` | A01 | roua lit le ticket #3 de mahdi |
-| VULN-004 | Secret JWT en dur | `VULNERABLE_JWT_SECRET` (`backend/server.js`) | A02 / A05 | visible dans le dépôt |
-| Bonus | Dépendances obsolètes | `backend/package.json` | A06 | express 4.17.1, jsonwebtoken 8.5.1 |
+Les vulnérabilités ci-dessous décrivent la version pédagogique des phases 0–1. Elles ont été corrigées ensuite : les payloads cités ne doivent pas être interprétés comme le comportement attendu de la version actuelle.
 
-Rejouer les preuves (à capturer pour le rapport) : `bash scripts/proofs.sh`.
-Détails : `docs/failles.md`.
+| N° | Faille initiale | Emplacement initial | Correction actuelle |
+|---|---|---|---|
+| VULN-001 | Injection SQL | Recherche `GET /search?q=` (`backend/server.js`) | Requête paramétrée, limites et filtrage par autorisation |
+| VULN-002 | XSS stocké | Affichage des commentaires (anciennement dans `frontend/index.html`) | Texte échappé au rendu dans `frontend/app.js`, avec CSP |
+| VULN-003 | IDOR | Lecture `GET /tickets/:id` (`backend/server.js`) | Vérification de propriété du ticket pour le rôle `user` |
+| VULN-004 | Secret JWT codé en dur | Ancienne constante dans `backend/server.js` | `JWT_SECRET` obligatoire via l'environnement; aucune valeur par défaut |
+
+Les contrôles après correction sont décrits dans `docs/correctifs-phase5.md` et couverts par `backend/test/regression.test.js`. `scripts/proofs.sh` envoie les payloads de démonstration; les tests de non-régression vérifient les résultats attendus sur la version corrigée : la recherche ne doit pas exposer les tickets d'autrui, l'IDOR doit être refusé et le commentaire HTML doit rester du texte. Les étapes historiques et leurs preuves sont décrites dans `docs/failles.md`.
 
 ## Structure
 
@@ -110,18 +110,22 @@ backend/    API Express (server.js), package.json, Dockerfile multi-étapes
 frontend/   index.html, Dockerfile (nginx non privilégié), nginx.conf
 docker-compose.yml   (db + backend + frontend)
 db/         init.sql (schéma + données fictives)
-docs/       architecture-initiale.md, failles.md, trame-rapport.md
-k8s/        cluster kind, manifestes, scripts de déploiement et de vérification (phase 6)
+docs/       guides des phases 3–8, architecture, failles historiques, preuves et trame du rapport
+k8s/        cluster kind, manifestes et scripts de déploiement (phases 6 et 8)
+zap/        scripts et spécifications des scans OWASP ZAP (phase 7)
 scripts/    start-db.sh, proofs.sh
 .env.example
 ```
 
-## Retrouver le reste du projet
-
-## Phases et preuves
+## Phases et documentation
 
 La branche `main` est la branche principale intégrée; `dev` sert au développement et aux intégrations avant `main`. `master` est une ancienne branche, pas la branche principale actuelle.
 
+- Phases 0–1, architecture et vulnérabilités de démonstration : [architecture](docs/architecture-initiale.md) et [failles historiques](docs/failles.md)
+- Phase 2, Docker Compose : instructions de démarrage ci-dessus et configuration dans `docker-compose.yml`
+- Phase 3, CI/CD : [description du pipeline](docs/pipeline-phase3.md) et configuration active dans `.github/workflows/ci.yml` (tests, Gitleaks, Semgrep, Trivy dépendances, build/scan Docker; publication GHCR uniquement après un push sur `main`)
+- Phase 4, secrets : [gestion, rotation et déploiements](docs/secrets-phase4.md)
+- Phase 5, corrections : [correctifs et limites connues](docs/correctifs-phase5.md)
 - Phase 6, Kubernetes : [guide et vérifications](docs/phase6-kubernetes.md)
 - Phase 7, OWASP ZAP : [comparaison avant/après](docs/phase7-zap.md) et [preuves](docs/preuves/phase7/comparaison.md)
 - Phase 8, observabilité : [architecture et procédures](docs/phase8-observabilite.md) et [preuves](docs/preuves/phase8/README.md)
