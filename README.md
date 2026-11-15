@@ -1,17 +1,18 @@
-# HelpDesk DevSecOps — Phases 0 à 5
+# HelpDesk DevSecOps — Phases 0 à 8
 
 Projet académique — Module DevSecOps, TEK-UP University (ING-5-SSIR).
 Binôme : **Ben Jemaa Roua** (backend, base de données, failles) · **Dkhil Mohamed Mahdi** (frontend, architecture, rapport).
 
-> Cette branche contient les phases 0 et 1 (application, base PostgreSQL, 4 failles volontaires, preuves) et la phase 2 (conteneurisation).
-> Les failles sont corrigées en phase 5. Kubernetes, DAST et observabilité viennent dans les phases suivantes.
+> Phases réalisées : 0–1 application et failles de démonstration, 2 conteneurisation, 3 pipeline CI, 4 gestion des secrets, 5 corrections, 6 Kubernetes, 7 scans OWASP ZAP et 8 observabilité.
 
 ## Démarrage
 
 Prérequis : Node.js 20+, Docker.
 
+Pour Docker Compose, commencez par copier `.env.example` vers `.env` et remplacez les valeurs `EXAMPLE_ONLY_*` par des valeurs locales. Compose échoue si les paramètres PostgreSQL sont absents. `ENABLE_DEMO_SEED=true` active les comptes de démonstration en développement; laissez-le à `false` en production. Le seed ne change jamais les comptes existants. Le schéma seul ne crée aucun compte.
+
 ```bash
-# 1. Base PostgreSQL (schéma + données fictives chargés automatiquement)
+# 1. Base PostgreSQL (schéma chargé automatiquement)
 bash scripts/start-db.sh
 #    PowerShell : docker run -d --name helpdesk-db -e POSTGRES_DB=helpdesk -e POSTGRES_USER=helpdesk -e POSTGRES_PASSWORD=change_me_fictif_123 -p 5432:5432 -v "${PWD}/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro" postgres:16-alpine
 
@@ -60,13 +61,16 @@ docker compose up --build -d
 
 Pour lancer le backend à la main : `$env:JWT_SECRET = "<valeur>"` avant `npm start`.
 Détails, GitHub Secrets, Secret Kubernetes et rotation : `docs/secrets-phase4.md`.
+Pour activer le seed local : `$env:ENABLE_DEMO_SEED = "true"`. En production, `NODE_ENV=production` désactive le seed par défaut et interdit son activation.
 
 ## Phase 5 : failles corrigées
 
 Les 4 failles sont corrigées et couvertes par des tests de non-régression (`backend/test/regression.test.js`).
 Détails, limites connues et mise à jour des dépendances : `docs/correctifs-phase5.md`.
 
-## Comptes de test (données fictives, mot de passe `Passw0rd!`)
+## Comptes de test (seed de développement uniquement, mot de passe `Passw0rd!`)
+
+Ces comptes ne sont créés que lorsque le seed est activé hors production. Ils ne sont pas initialisés par le schéma SQL ni dans Kubernetes.
 
 | Rôle | Identifiant | Usage |
 |---|---|---|
@@ -102,6 +106,14 @@ scripts/    start-db.sh, proofs.sh
 
 ## Retrouver le reste du projet
 
-Tout le travail déjà fait est conservé dans l'historique Git :
-- `master` : version avec pipeline GitHub Actions (phase 3) ;
-- `secure` : version avec les failles corrigées (phase 5).
+## Phases et preuves
+
+La branche `main` est la branche principale intégrée; `dev` sert au développement et aux intégrations avant `main`. `master` est une ancienne branche, pas la branche principale actuelle.
+
+- Phase 6, Kubernetes : [guide et vérifications](docs/phase6-kubernetes.md)
+- Phase 7, OWASP ZAP : [comparaison avant/après](docs/phase7-zap.md) et [preuves](docs/preuves/phase7/comparaison.md)
+- Phase 8, observabilité : [architecture et procédures](docs/phase8-observabilite.md) et [preuves](docs/preuves/phase8/README.md)
+
+## Corrections sécurité de cette branche
+
+Le seed ne réinitialise aucun mot de passe et est désactivé en production. PostgreSQL exige des identifiants explicites dans Compose. Les styles et scripts principaux sont servis depuis `frontend/styles.css` et `frontend/app.js`; les attributs `style` et gestionnaires `onclick` encore présents imposent toutefois de conserver `unsafe-inline` dans la CSP jusqu'à leur migration complète. Trivy bloque désormais les vulnérabilités HIGH et CRITICAL sur l'image.

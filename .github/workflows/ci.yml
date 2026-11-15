@@ -1,8 +1,7 @@
 name: HelpDesk DevSecOps Pipeline
 
-# Phase 3 : pipeline BLOQUANT. Chaque contrôle de sécurité fait échouer le pipeline
-# (aucun "|| true", aucun "continue-on-error"). Tant que les 4 failles volontaires
-# existent, le pipeline est ROUGE : c'est le comportement attendu (preuve de la phase 3).
+# Phase 3 : pipeline bloquant. Les contrôles de sécurité font échouer le pipeline
+# en cas de détection; les vulnérabilités HIGH et CRITICAL de l'image sont bloquantes.
 on:
   push:
     branches: ["main", "dev", "feat/**"]
@@ -70,7 +69,7 @@ jobs:
           kill "$SERVER_PID" 2>/dev/null || true
           exit "$STATUS"
 
-  # JOB 2 : détection de secrets (Roua). BLOQUE sur VULN-004 (secret JWT en dur).
+  # JOB 2 : détection de secrets (Roua).
   # On lance le binaire Gitleaks directement : l'action gitleaks-action ne scanne que les
   # commits du push en cours (le secret, déjà présent dans l'historique, passerait inaperçu).
   gitleaks:
@@ -89,7 +88,7 @@ jobs:
       - name: Analyse de tout l'historique Git
         run: gitleaks detect --source . --config .gitleaks.toml --redact --verbose --exit-code 1
 
-  # JOB 3 : analyse statique SAST (Roua). BLOQUE si une règle de sévérité ERROR est déclenchée.
+  # JOB 3 : analyse statique SAST (Roua). Bloque si une règle de sévérité ERROR est déclenchée.
   semgrep:
     name: "Semgrep - SAST"
     runs-on: ubuntu-latest
@@ -141,11 +140,11 @@ jobs:
           tags: helpdesk-backend:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      - name: Trivy - scan de l'image (bloque sur CRITICAL)
+      - name: Trivy - scan de l'image (bloque sur HIGH et CRITICAL)
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: "helpdesk-backend:${{ github.sha }}"
-          severity: "CRITICAL"
+          severity: "HIGH,CRITICAL"
           ignore-unfixed: true
           exit-code: "1"
           format: "table"

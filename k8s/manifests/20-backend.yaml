@@ -29,6 +29,8 @@ spec:
             - { name: http, containerPort: 3000 }
             - { name: metrics, containerPort: 9100 }     # métriques Prometheus (jamais exposé par nginx)
           env:
+            - { name: NODE_ENV, value: "production" }
+            - { name: ENABLE_DEMO_SEED, value: "false" }
             - { name: PORT, value: "3000" }
             - { name: DB_HOST, value: db }
             - { name: DB_PORT, value: "5432" }

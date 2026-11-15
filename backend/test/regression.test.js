@@ -58,9 +58,25 @@ test('VULN-001 : une saisie invalide ne divulgue ni message SQL ni requête', in
 
 // --- VULN-002 : XSS stocké --------------------------------------------------
 test('VULN-002 : le frontend n\'injecte plus le corps des commentaires en HTML', () => {
-  const html = fs.readFileSync(path.join(ROOT, 'frontend', 'index.html'), 'utf8');
-  assert.ok(!/innerHTML[^;]*\$\{\s*c\.body\s*\}/.test(html), 'c.body est encore injecté via innerHTML');
-  assert.ok(/textContent\s*=\s*c\.body/.test(html), 'le corps du commentaire doit être affiché avec textContent');
+  const js = fs.readFileSync(path.join(ROOT, 'frontend', 'app.js'), 'utf8');
+  assert.ok(!/innerHTML[^;]*\$\{\s*c\.body\s*\}/.test(js), 'c.body est encore injecté via innerHTML');
+  assert.ok(/textContent\s*=\s*c\.body/.test(js), 'le corps du commentaire doit être affiché avec textContent');
+});
+
+test('SEED : aucun mot de passe existant n’est réinitialisé et la production ne seed pas', () => {
+  const server = fs.readFileSync(path.join(BACKEND_DIR, 'server.js'), 'utf8');
+  const seed = server.slice(server.indexOf('async function seedDatabase()'));
+  assert.match(seed, /ON CONFLICT \(username\) DO NOTHING/);
+  assert.doesNotMatch(seed, /UPDATE\s+users\s+SET\s+password_hash/i);
+  assert.match(seed, /NODE_ENV === 'production'/);
+  assert.match(seed, /ENABLE_DEMO_SEED/);
+});
+
+test('SEED : aucun mot de passe de démonstration n’est livré dans le frontend', () => {
+  for (const name of ['index.html', 'app.js']) {
+    const content = fs.readFileSync(path.join(ROOT, 'frontend', name), 'utf8');
+    assert.ok(!content.includes('Passw0rd!'), `${name} expose le mot de passe de démonstration`);
+  }
 });
 
 test('VULN-002 : l\'API envoie une politique CSP et les en-têtes de sécurité', integration, async () => {
