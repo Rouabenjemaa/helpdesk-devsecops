@@ -23,3 +23,10 @@
 | Informational | Modern Web Application | 4 | 4 | PRESENTE |
 | Informational | Non-Storable Content | 5 | 5 | PRESENTE |
 | Informational | Storable and Cacheable Content | 4 | 4 | PRESENTE |
+
+## Captures d’écran
+
+- `Capture d'écran 2026-11-11 083546.png` : rapport ZAP avant correction (CSP Header Not Set et Missing Anti-clickjacking).
+- `Capture d'écran 2026-11-11 083536.png` : rapport ZAP après correction (alertes CSP `unsafe-inline` restantes).
+
+Les rapports HTML/JSON et ce tableau restent les références détaillées ; les captures PNG sont des preuves visuelles de synthèse.
